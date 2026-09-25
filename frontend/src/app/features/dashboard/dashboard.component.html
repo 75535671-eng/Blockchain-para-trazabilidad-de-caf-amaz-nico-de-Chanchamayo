@@ -1,0 +1,64 @@
+<header class="page-head">
+  <div>
+    <h1 class="saludo">Hola, {{ auth.sesion()?.nombre }}</h1>
+    <p>Monitoreo de la trazabilidad del café de Chanchamayo</p>
+  </div>
+</header>
+
+@if (cargando) { <p class="vacio">Cargando información registrada…</p> }
+@if (error) { <p class="alerta error">{{ error }}</p> }
+
+<section class="stats">
+  <article class="card stat"><div><span class="muted">Productores</span><strong>{{ productores }}</strong><span class="muted">fichas registradas</span></div><span class="icono">☺</span></article>
+  <article class="card stat"><div><span class="muted">Parcelas</span><strong>{{ parcelas }}</strong><span class="muted">orígenes vinculados</span></div><span class="icono">▣</span></article>
+  <article class="card stat"><div><span class="muted">Lotes</span><strong>{{ lotes }}</strong><span class="muted">con estado registrado</span></div><span class="icono">▤</span></article>
+  <article class="card stat"><div><span class="muted">Producción</span><strong>{{ kilogramos }} kg</strong><span class="muted">suma de lotes consultados</span></div><span class="icono">⚖</span></article>
+</section>
+
+<section class="layout-2">
+  <article class="card">
+    <h2>Cosecha registrada</h2>
+    <p class="muted">Kilogramos agrupados por mes de cosecha. Solo usa lotes ya guardados.</p>
+    @if (barras.length === 0) {
+      <p class="vacio">Todavía no hay lotes para mostrar la cosecha.</p>
+    } @else {
+      <div class="barras">
+        @for (barra of barras; track barra.etiqueta) {
+          <div class="barra">
+            <span [style.height.px]="barra.altura" [title]="barra.kilogramos + ' kg'"></span>
+            {{ barra.etiqueta }}
+          </div>
+        }
+      </div>
+    }
+  </article>
+  <article class="card">
+    <h2>Actividad reciente</h2>
+    <p class="muted">Esta sección está lista para eventos de registro. El PMV1 todavía no guarda un historial de actividad.</p>
+    <p class="vacio">No hay eventos de actividad para mostrar.</p>
+  </article>
+</section>
+
+<section class="card" style="margin-top: 0.9rem">
+  <div class="lote-top">
+    <h2>Últimos lotes registrados</h2>
+    <a routerLink="/lotes">Ver todos</a>
+  </div>
+  @if (recientes.length === 0) {
+    <p class="vacio">Aún no se ha registrado un lote.</p>
+  }
+  @for (lote of recientes; track lote.id) {
+    <article class="lote-card" style="margin-top: 0.8rem">
+      <div class="lote-top">
+        <span class="codigo">{{ lote.codigo }}</span>
+        <span class="badge">{{ lote.estado }}</span>
+      </div>
+      <p class="muted">{{ lote.productor }} · {{ lote.parcela }}</p>
+      <div class="meta">
+        <span>Variedad: {{ lote.variedad }}</span>
+        <span>Peso: {{ lote.cantidadKg }} kg</span>
+      </div>
+      <a class="btn secundario" [routerLink]="['/lotes', lote.id]">Consultar</a>
+    </article>
+  }
+</section>

@@ -1,0 +1,14 @@
+<div class="auth-pagina">
+  <section class="card auth-card">
+    <a class="marca" routerLink="/login"><img class="logo-mark" src="/logo.jpg" alt="Café Chanchamayo" /></a>
+    <h1 style="margin-top: 1rem">Ingresar</h1>
+    <p class="muted">Accede al registro de productores, parcelas y lotes.</p>
+    <form [formGroup]="form" (ngSubmit)="enviar()" style="margin-top: 1rem">
+      <label class="campo">Correo <input formControlName="email" type="email" /></label>
+      <label class="campo">Contraseña <input formControlName="password" type="password" /></label>
+      @if (error) { <p class="alerta error">{{ error }}</p> }
+      <button class="btn" type="submit">Entrar</button>
+    </form>
+    <p><a routerLink="/registro">Crear una cuenta de productor</a></p>
+  </section>
+</div>
