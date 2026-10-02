@@ -1,0 +1,54 @@
+<app-botanica-fondo />
+@if (!auth.sesion()) {
+  <button type="button" class="btn secundario tema-fijo" (click)="tema.alternar()">
+    {{ tema.oscuro() ? 'Modo claro' : 'Modo oscuro' }}
+  </button>
+  <router-outlet />
+} @else {
+  <div class="shell">
+    <aside class="sidebar">
+      <a routerLink="/inicio" class="marca">
+        <img class="logo-mark" src="/logo.png" alt="Chanchamayo, café peruano" />
+      </a>
+      <nav class="nav-links">
+        @for (enlace of enlacesVisibles; track enlace.ruta) {
+          <a [routerLink]="enlace.ruta" routerLinkActive="activo">{{ enlace.icono }} {{ enlace.texto }}</a>
+        }
+      </nav>
+      <div class="nav-foot">
+        <button type="button" (click)="tema.alternar()">{{ tema.oscuro() ? '☀ Modo claro' : '☾ Modo oscuro' }}</button>
+        <button type="button" (click)="salir()">⎋ Cerrar sesión</button>
+      </div>
+    </aside>
+    <div class="workspace">
+      <main class="contenido">
+        <router-outlet />
+      </main>
+    </div>
+    <button type="button" class="btn secundario tema-movil" (click)="tema.alternar()">
+      {{ tema.oscuro() ? 'Claro' : 'Oscuro' }}
+    </button>
+    <nav class="tabbar">
+      @for (enlace of enlacesVisibles; track enlace.ruta) {
+        <a [routerLink]="enlace.ruta" routerLinkActive="activo">
+          <span>{{ enlace.icono }}</span>
+          {{ enlace.texto === 'Dashboard' ? 'Inicio' : enlace.texto === 'Análisis IA' ? 'Análisis' : enlace.texto === 'Solicitudes de registro' ? 'Solicitudes' : enlace.texto }}
+        </a>
+      }
+    </nav>
+    @if (auth.avisoRol(); as aviso) {
+      <div class="modal-fondo encima">
+        <article class="modal">
+          @if (aviso === 'otorgado') {
+            <h2>¡Ahora tienes permisos de administrador!</h2>
+            <p>Se te han otorgado permisos de administrador. Para acceder a las nuevas funcionalidades, debes cerrar sesión e iniciar sesión nuevamente.</p>
+          } @else {
+            <h2>Se retiraron tus permisos de administrador</h2>
+            <p>Ya no tienes acceso al modo Administrador. Para volver al modo Productor, debes cerrar sesión e iniciar sesión nuevamente.</p>
+          }
+          <button type="button" class="btn" (click)="auth.cerrarAvisoRol()">Cerrar</button>
+        </article>
+      </div>
+    }
+  </div>
+}

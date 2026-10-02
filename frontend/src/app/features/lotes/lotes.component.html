@@ -1,0 +1,87 @@
+<header class="page-head">
+  <div>
+    <h1>Lotes</h1>
+    <p>Consulta y registra la trazabilidad de la producción.</p>
+  </div>
+  <button type="button" class="btn" (click)="abrirRegistro()">+ Registrar lote</button>
+</header>
+@if (aviso) { <p class="alerta ok">{{ aviso }}</p> }
+@if (error && !modal) { <p class="alerta error">{{ error }}</p> }
+<div class="toolbar">
+  <label class="buscar">Buscar <input [(ngModel)]="filtro" name="filtro" placeholder="Código, productor, parcela o variedad" /></label>
+</div>
+<section class="card tabla-wrap">
+  <table class="tabla">
+    <thead>
+      <tr><th>Código</th><th>Estado</th><th>Productor</th><th>Parcela</th><th>Variedad</th><th>Kg</th><th>Fecha</th><th></th></tr>
+    </thead>
+    <tbody>
+      @for (lote of visibles; track lote.id) {
+        <tr>
+          <td class="codigo">{{ lote.codigo }}</td>
+          <td><span class="badge">{{ lote.estado }}</span></td>
+          <td>{{ lote.productor }}</td>
+          <td>{{ lote.parcela }}</td>
+          <td>{{ lote.variedad }}</td>
+          <td>{{ lote.cantidadKg }}</td>
+          <td>{{ lote.fechaCosecha }}</td>
+          <td class="acciones">
+            <button type="button" class="btn texto" (click)="editar(lote)">Editar</button>
+            <button type="button" class="btn texto" (click)="eliminar(lote)">Eliminar</button>
+            <a class="btn texto" [routerLink]="['/lotes', lote.id]">Consultar</a>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (visibles.length === 0) { <p class="vacio">No hay lotes para mostrar.</p> }
+</section>
+<section class="cards-movil">
+  @for (lote of visibles; track lote.id) {
+    <article class="card lote-card">
+      <div class="lote-top"><span class="codigo">{{ lote.codigo }}</span><span class="badge">{{ lote.estado }}</span></div>
+      <p class="muted">{{ lote.productor }} · {{ lote.parcela }}</p>
+      <div class="meta"><span>{{ lote.variedad }}</span><span>{{ lote.cantidadKg }} kg</span><span>{{ lote.fechaCosecha }}</span></div>
+      <div class="acciones">
+        <button type="button" class="btn texto" (click)="editar(lote)">Editar</button>
+        <button type="button" class="btn texto" (click)="eliminar(lote)">Eliminar</button>
+        <a class="btn secundario" [routerLink]="['/lotes', lote.id]">Consultar</a>
+      </div>
+    </article>
+  }
+</section>
+
+@if (modal) {
+  <div class="modal-fondo">
+    <form class="modal" [formGroup]="form" (ngSubmit)="registrar()">
+      <h2>{{ editandoId ? 'Editar lote' : 'Registrar lote' }}</h2>
+      <div class="form-grid" style="margin-top: 1rem">
+        @if (editandoId) {
+          <label class="campo">Código <input [value]="codigoEdicion" readonly /></label>
+          <label class="campo">Estado <input [value]="estadoEdicion" readonly /></label>
+        }
+        <label class="campo">Parcela
+          <select formControlName="parcelaId">
+            @for (parcela of parcelas; track parcela.id) {
+              <option [value]="parcela.id">{{ parcela.nombre }} — {{ parcela.distrito }}</option>
+            }
+          </select>
+        </label>
+        <label class="campo">Fecha de cosecha <input formControlName="fechaCosecha" type="date" /></label>
+        <label class="campo">Kilogramos <input formControlName="cantidadKg" type="number" step="0.01" /></label>
+        <label class="campo">Variedad
+          <select formControlName="variedad">
+            <option value="" disabled>Selecciona una variedad</option>
+            @for (item of variedades; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
+        <label class="campo">Observaciones <input formControlName="observaciones" /></label>
+      </div>
+      @if (error) { <p class="alerta error">{{ error }}</p> }
+      <div class="acciones" style="margin-top: 1rem">
+        <button type="button" class="btn secundario" (click)="modal = false">Cancelar</button>
+        <button class="btn" [disabled]="guardando">{{ guardando ? (editandoId ? 'Guardando cambios...' : 'Guardando…') : (editandoId ? 'Guardar cambios' : 'Guardar') }}</button>
+      </div>
+    </form>
+  </div>
+}

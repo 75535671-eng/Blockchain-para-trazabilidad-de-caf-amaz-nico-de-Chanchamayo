@@ -1,0 +1,3 @@
+-- El esquema vigente está en database/migrations/001_pmv1_inicial.sql.
+-- Aplícalo en el SQL Editor de Supabase o con psql.
+-- Este archivo ya no crea una base MySQL.

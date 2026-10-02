@@ -1,0 +1,92 @@
+<header class="page-head">
+  <div>
+    <h1>Solicitudes de registro</h1>
+    <p>Revisa las cuentas que los productores pidieron por su cuenta.</p>
+  </div>
+</header>
+@if (aviso) { <p class="alerta ok">{{ aviso }}</p> }
+@if (error) { <p class="alerta error">{{ error }}</p> }
+<div class="toolbar">
+  <label class="buscar">Buscar
+    <input [(ngModel)]="filtro" name="filtro" placeholder="Nombre, documento o correo" />
+  </label>
+</div>
+<section class="card tabla-wrap">
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Nombre</th><th>DNI/RUC</th><th>Teléfono</th><th>Organización</th><th>Correo</th><th>Fecha</th><th>Estado</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (solicitud of visibles; track solicitud.id) {
+        <tr>
+          <td>{{ solicitud.nombre }}</td>
+          <td>{{ solicitud.documento }}</td>
+          <td>{{ solicitud.telefono }}</td>
+          <td>{{ solicitud.organizacion || '—' }}</td>
+          <td>{{ solicitud.email }}</td>
+          <td>{{ fecha(solicitud.fechaSolicitud) }}</td>
+          <td><span class="badge">{{ solicitud.estado }}</span></td>
+          <td class="acciones">
+            <button type="button" class="btn texto" (click)="consultada = solicitud">Consultar</button>
+            @if (solicitud.estado === 'pendiente') {
+              <button type="button" class="btn texto" (click)="aprobar(solicitud)" [disabled]="guardando">Aprobar</button>
+              <button type="button" class="btn texto" (click)="rechazo = solicitud; motivo = ''; error = ''">Rechazar</button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (visibles.length === 0) { <p class="vacio">No hay solicitudes para mostrar.</p> }
+</section>
+<section class="cards-movil">
+  @for (solicitud of visibles; track solicitud.id) {
+    <article class="card productor-card">
+      <strong>{{ solicitud.nombre }}</strong>
+      <span class="muted">{{ solicitud.documento }} · {{ solicitud.email }}</span>
+      <span class="muted">{{ solicitud.telefono }} · {{ solicitud.organizacion || 'Sin organización' }}</span>
+      <span class="badge">{{ solicitud.estado }}</span>
+      <span class="muted">{{ fecha(solicitud.fechaSolicitud) }}</span>
+      <div class="acciones">
+        <button type="button" class="btn texto" (click)="consultada = solicitud">Consultar</button>
+        @if (solicitud.estado === 'pendiente') {
+          <button type="button" class="btn texto" (click)="aprobar(solicitud)" [disabled]="guardando">Aprobar</button>
+          <button type="button" class="btn texto" (click)="rechazo = solicitud; motivo = ''; error = ''">Rechazar</button>
+        }
+      </div>
+    </article>
+  }
+</section>
+
+@if (consultada) {
+  <div class="modal-fondo encima">
+    <article class="modal">
+      <h2>{{ consultada.nombre }}</h2>
+      <p>Documento {{ consultada.documento }}</p>
+      <p class="muted">{{ consultada.telefono }} · {{ consultada.organizacion || 'Sin organización' }}</p>
+      <p>{{ consultada.email }}</p>
+      <p>Estado: {{ consultada.estado }}</p>
+      <p class="muted">Solicitada el {{ fecha(consultada.fechaSolicitud) }}</p>
+      @if (consultada.motivoRechazo) { <p>Motivo: {{ consultada.motivoRechazo }}</p> }
+      <button type="button" class="btn" (click)="consultada = null">Cerrar</button>
+    </article>
+  </div>
+}
+
+@if (rechazo) {
+  <div class="modal-fondo encima">
+    <article class="modal">
+      <h2>Rechazar solicitud</h2>
+      <p>Confirma el rechazo de <strong>{{ rechazo.nombre }}</strong> e indica el motivo.</p>
+      <label class="campo">Motivo
+        <textarea [(ngModel)]="motivo" name="motivo" rows="3" maxlength="500"></textarea>
+      </label>
+      <div class="acciones" style="margin-top: 1rem">
+        <button type="button" class="btn secundario" (click)="rechazo = null" [disabled]="guardando">Cancelar</button>
+        <button type="button" class="btn" (click)="confirmarRechazo()" [disabled]="guardando">Confirmar rechazo</button>
+      </div>
+    </article>
+  </div>
+}

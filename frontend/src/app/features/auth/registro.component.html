@@ -1,0 +1,43 @@
+<div class="auth-pagina">
+  <section class="auth-shell">
+    <svg class="curva" viewBox="0 0 180 1000" preserveAspectRatio="none" aria-hidden="true">
+      <path class="relleno" d="M0,0 L58,0 C168,70 172,230 128,400 C36,620 22,760 86,1000 L0,1000 Z" />
+      <path class="borde" d="M58,0 C168,70 172,230 128,400 C36,620 22,760 86,1000" />
+    </svg>
+    <svg class="curva-movil" viewBox="0 0 1000 72" preserveAspectRatio="none" aria-hidden="true">
+      <path class="relleno" d="M0,36 C180,0 320,72 500,36 C680,0 820,72 1000,36 L1000,72 L0,72 Z" />
+      <path class="borde" d="M0,36 C180,0 320,72 500,36 C680,0 820,72 1000,36" />
+    </svg>
+    <div class="auth-form">
+      <a routerLink="/login"><img class="logo-auth" src="/logo.png" alt="Chanchamayo, café peruano" /></a>
+      <h1>Solicitar cuenta</h1>
+      <p class="muted">El administrador revisará tus datos antes de habilitar el acceso.</p>
+      @if (mensaje) {
+        <p class="alerta ok">{{ mensaje }}</p>
+        <a class="btn bloque" routerLink="/login">Volver al inicio de sesión</a>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="enviar()">
+          <div class="form-grid">
+            <label class="campo">Nombre completo <input formControlName="nombre" /></label>
+            <label class="campo">DNI o RUC <input formControlName="documento" inputmode="numeric" maxlength="11" /></label>
+            <label class="campo">Teléfono <input formControlName="telefono" /></label>
+            <label class="campo">Organización <input formControlName="organizacion" /></label>
+            <label class="campo">Correo electrónico <input formControlName="email" type="email" /></label>
+            <label class="campo">Contraseña <input formControlName="password" type="password" autocomplete="new-password" /></label>
+            <label class="campo">Confirmar contraseña <input formControlName="confirmacion" type="password" autocomplete="new-password" /></label>
+          </div>
+          @if (error) { <p class="alerta error">{{ error }}</p> }
+          <button class="btn bloque" type="submit" [disabled]="enviando">{{ enviando ? 'Enviando…' : 'Enviar solicitud' }}</button>
+          <a class="btn secundario bloque" routerLink="/login">Ya tengo cuenta</a>
+        </form>
+      }
+    </div>
+    <aside class="auth-hero">
+      <div>
+        <h2>¡Bienvenido!</h2>
+        <p>Tu café tiene una historia.<br />Hagamos visible su origen.</p>
+      </div>
+      <p class="auth-nota">Registra tu producción y conserva la historia de cada lote.</p>
+    </aside>
+  </section>
+</div>
