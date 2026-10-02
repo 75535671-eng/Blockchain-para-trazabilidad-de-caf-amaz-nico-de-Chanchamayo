@@ -29,7 +29,13 @@
           <td class="acciones">
             @if (auth.sesion()?.rol === 'ADMINISTRADOR') {
               <button type="button" class="btn texto" (click)="editar(productor)">Editar</button>
-              <button type="button" class="btn texto" (click)="eliminar(productor)">Eliminar</button>
+              <button type="button" class="btn texto" (click)="pedirEliminacion(productor)">Eliminar</button>
+              @if (puedeRecibirAdministrador(productor)) {
+                <button type="button" class="btn texto" (click)="pedirPermisos(productor)">Otorgar permisos</button>
+              }
+              @if (puedeQuitarAdministrador(productor)) {
+                <button type="button" class="btn texto" (click)="pedirRetiro(productor)">Quitar permisos de administrador</button>
+              }
             }
             <button type="button" class="btn texto" (click)="consultado = productor">Consultar</button>
           </td>
@@ -48,7 +54,13 @@
       <div class="acciones">
         @if (auth.sesion()?.rol === 'ADMINISTRADOR') {
           <button type="button" class="btn texto" (click)="editar(productor)">Editar</button>
-          <button type="button" class="btn texto" (click)="eliminar(productor)">Eliminar</button>
+          <button type="button" class="btn texto" (click)="pedirEliminacion(productor)">Eliminar</button>
+          @if (puedeRecibirAdministrador(productor)) {
+            <button type="button" class="btn texto" (click)="pedirPermisos(productor)">Otorgar permisos</button>
+          }
+          @if (puedeQuitarAdministrador(productor)) {
+            <button type="button" class="btn texto" (click)="pedirRetiro(productor)">Quitar permisos de administrador</button>
+          }
         }
         <button type="button" class="btn texto" (click)="consultado = productor">Consultar</button>
       </div>
@@ -61,18 +73,131 @@
     <form class="modal" [formGroup]="form" (ngSubmit)="registrar()">
       <h2>{{ editandoId ? 'Editar productor' : 'Registrar productor' }}</h2>
       <div class="form-grid" style="margin-top: 1rem">
-        <label class="campo">Nombre <input formControlName="nombre" /></label>
-        <label class="campo">DNI o RUC <input formControlName="documento" [readOnly]="!!editandoId" /></label>
+        <label class="campo">DNI o RUC
+          <input formControlName="documento" inputmode="numeric" maxlength="11" [readOnly]="!!editandoId" (input)="alCambiarDocumento()" />
+        </label>
+        <label class="campo">Apellidos y nombres <input formControlName="nombre" /></label>
         <label class="campo">Teléfono <input formControlName="telefono" /></label>
         <label class="campo">Organización <input formControlName="organizacion" /></label>
+        @if (!editandoId) {
+          <label class="campo">Correo electrónico <input formControlName="email" type="email" autocomplete="off" /></label>
+          <label class="campo">Contraseña temporal
+            <input formControlName="password" type="text" autocomplete="new-password" />
+          </label>
+        }
       </div>
-      @if (form.touched && form.invalid) { <p class="alerta error">Completa el nombre y el documento.</p> }
+      @if (!editandoId) {
+        <button type="button" class="btn secundario" style="margin-top: 0.6rem" (click)="generarClave()">Generar contraseña</button>
+      }
+      @if (consultandoDni) { <p class="aviso-suave">Consultando documento…</p> }
+      @if (avisoDni) { <p class="aviso-suave">{{ avisoDni }}</p> }
+      @if (mensajeValidacion) { <p class="alerta error">{{ mensajeValidacion }}</p> }
+      @if (errorFormulario) { <p class="alerta error">{{ errorFormulario }}</p> }
       <div class="acciones" style="margin-top: 1rem">
         <button type="button" class="btn secundario" (click)="modal = false">Cancelar</button>
         <button type="submit" class="btn" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
       </div>
     </form>
   </div>
+}
+
+@if (duplicado) {
+  <div class="modal-fondo encima">
+    <article class="modal">
+      <p>Este productor ya se encuentra registrado</p>
+      <button type="button" class="btn" (click)="duplicado = false">Cerrar</button>
+    </article>
+  </div>
+}
+
+@if (confirmacion) {
+  <div class="modal-fondo encima">
+    <article class="modal">
+      @if (confirmacion.accion === 'otorgar') {
+        @if (confirmacion.paso === 1) {
+          <h2>Otorgar permisos</h2>
+          <p>{{ confirmacion.productor.nombre }} obtendrá acceso al modo Administrador y a sus funcionalidades.</p>
+        } @else {
+          <h2>Confirmar cambio de permisos</h2>
+          <p>Confirma nuevamente que <strong>{{ confirmacion.productor.nombre }}</strong> cambiará sus permisos y pasará a ser administrador.</p>
+          @if (!confirmacion.productor.usuarioId) {
+            <div class="form-grid" style="margin-top: 1rem">
+              <label class="campo">Correo de acceso
+                <input type="email" [(ngModel)]="correoCuenta" name="correoCuenta" autocomplete="off" />
+              </label>
+              <label class="campo">Contraseña
+                <input type="password" [(ngModel)]="claveCuenta" name="claveCuenta" autocomplete="new-password" />
+              </label>
+            </div>
+            <p class="aviso-suave">Este productor aún no tiene cuenta. El correo y la contraseña servirán para iniciar sesión con los permisos de administrador.</p>
+          }
+          @if (errorCuenta) { <p class="alerta error">{{ errorCuenta }}</p> }
+        }
+      } @else {
+        @if (confirmacion.paso === 1) {
+          <h2>Quitar permisos de administrador</h2>
+          <p>{{ confirmacion.productor.nombre }} dejará de tener acceso al modo Administrador y a sus funcionalidades.</p>
+        } @else {
+          <h2>Confirmar retiro de permisos</h2>
+          <p>Confirma nuevamente que <strong>{{ confirmacion.productor.nombre }}</strong> perderá los permisos de administrador y volverá al modo Productor.</p>
+        }
+      }
+      <div class="acciones" style="margin-top: 1rem">
+        <button type="button" class="btn secundario" (click)="cancelarPermisos()" [disabled]="otorgando">Cancelar</button>
+        <button type="button" class="btn" (click)="continuarPermisos()" [disabled]="otorgando">
+          {{ confirmacion.paso === 1 ? 'Continuar' : otorgando ? 'Guardando…' : 'Confirmar' }}
+        </button>
+      </div>
+    </article>
+  </div>
+}
+
+@if (credenciales) {
+  <div class="modal-fondo encima">
+    <article class="modal">
+      <h2>¡Productor registrado correctamente!</h2>
+      <p><strong>{{ credenciales.nombre }}</strong></p>
+      <p>Correo: {{ credenciales.email }}</p>
+      <p>Contraseña temporal: {{ credenciales.password }}</p>
+      <p class="alerta error">IMPORTANTE: Anota y entrega estas credenciales al productor. La contraseña temporal solo se mostrará en esta ventana. Cuando la cierres, no podrás volver a consultar la contraseña. Si la pierdes, tendrás que generar una nueva.</p>
+      @if (copiado) { <p class="alerta ok">Credenciales copiadas.</p> }
+      <div class="acciones" style="margin-top: 1rem">
+        <button type="button" class="btn secundario" (click)="copiarCredenciales()">Copiar credenciales</button>
+        <button type="button" class="btn" (click)="finalizarCredenciales()">Finalizar</button>
+      </div>
+    </article>
+  </div>
+}
+
+@if (eliminacion; as pendiente) {
+  @if (pendiente.paso === 1) {
+    <div class="modal-fondo encima">
+      <article class="modal">
+        <h2>¿Eliminar productor?</h2>
+        <p>Estás a punto de eliminar al productor {{ pendiente.productor.nombre }}. Esta acción eliminará su ficha y todos los datos asociados a su cuenta, incluyendo sus parcelas, lotes de café y registros relacionados. Esta acción no se puede deshacer.</p>
+        <div class="acciones" style="margin-top: 1rem">
+          <button type="button" class="btn secundario" (click)="cancelarEliminacion()">Cancelar</button>
+          <button type="button" class="btn" (click)="continuarEliminacion()">Continuar</button>
+        </div>
+      </article>
+    </div>
+  }
+  @if (pendiente.paso === 2) {
+    <div class="modal-fondo encima">
+      <article class="modal">
+        <h2>Confirmación definitiva de eliminación</h2>
+        <p>¿Estás completamente seguro? Se eliminarán permanentemente el productor, su cuenta de acceso y todos los registros asociados. No podrás recuperar esta información después de confirmar.</p>
+        <label>
+          Escribe el nombre completo del productor
+          <input [(ngModel)]="nombreConfirmacion" name="nombreConfirmacion" autocomplete="off" [attr.aria-label]="'Nombre de ' + pendiente.productor.nombre" />
+        </label>
+        <div class="acciones" style="margin-top: 1rem">
+          <button type="button" class="btn secundario" (click)="cancelarEliminacion()" [disabled]="eliminando">Cancelar</button>
+          <button type="button" class="btn" (click)="confirmarEliminacion()" [disabled]="!puedeEliminar || eliminando">Eliminar permanentemente</button>
+        </div>
+      </article>
+    </div>
+  }
 }
 
 @if (consultado) {
@@ -85,3 +210,4 @@
     </article>
   </div>
 }
+

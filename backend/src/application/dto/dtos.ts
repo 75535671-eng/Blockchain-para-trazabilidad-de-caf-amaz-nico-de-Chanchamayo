@@ -10,6 +10,7 @@ export interface UsuarioDto {
   nombre: string;
   email: string;
   rol: RolUsuario;
+  debeCambiarPassword: boolean;
 }
 
 export interface ProductorDto {
@@ -19,6 +20,7 @@ export interface ProductorDto {
   documento: string;
   telefono: string | null;
   organizacion: string | null;
+  rolCuenta?: RolUsuario | null;
 }
 
 export interface ParcelaDto {

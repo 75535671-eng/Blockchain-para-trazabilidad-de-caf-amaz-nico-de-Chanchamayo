@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -11,27 +11,48 @@ import { AuthService } from '../../core/auth.service';
 })
 export class RegistroComponent {
   error = '';
+  mensaje = '';
+  enviando = false;
   readonly form;
 
   constructor(
     fb: FormBuilder,
     private readonly auth: AuthService,
-    private readonly router: Router,
   ) {
     this.form = fb.nonNullable.group({
       nombre: ['', Validators.required],
-      email: ['', Validators.required],
-      password: ['', Validators.required],
-      documento: ['', Validators.required],
-      telefono: [''],
+      documento: ['', [Validators.required, Validators.pattern(/^(\d{8}|\d{11})$/)]],
+      telefono: ['', Validators.required],
       organizacion: [''],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
+      confirmacion: ['', Validators.required],
     });
   }
 
   enviar(): void {
-    this.auth.registrar(this.form.getRawValue()).subscribe({
-      next: () => void this.router.navigate(['/login']),
-      error: (error: { error?: { error?: string } }) => (this.error = error.error?.error ?? 'No se pudo registrar.'),
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.error = 'Completa los campos obligatorios con un formato válido.';
+      return;
+    }
+    const datos = this.form.getRawValue();
+    if (datos.password !== datos.confirmacion) {
+      this.error = 'Las contraseñas no coinciden.';
+      return;
+    }
+    this.enviando = true;
+    this.error = '';
+    this.auth.registrar(datos).subscribe({
+      next: (respuesta) => {
+        this.enviando = false;
+        this.mensaje = respuesta.mensaje;
+        this.form.reset();
+      },
+      error: (error: { error?: { error?: string } }) => {
+        this.enviando = false;
+        this.error = error.error?.error ?? 'No se pudo enviar la solicitud.';
+      },
     });
   }
 }

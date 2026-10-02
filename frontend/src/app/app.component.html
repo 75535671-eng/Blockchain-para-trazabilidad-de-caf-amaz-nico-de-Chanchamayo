@@ -1,3 +1,4 @@
+<app-botanica-fondo />
 @if (!auth.sesion()) {
   <button type="button" class="btn secundario tema-fijo" (click)="tema.alternar()">
     {{ tema.oscuro() ? 'Modo claro' : 'Modo oscuro' }}
@@ -7,10 +8,10 @@
   <div class="shell">
     <aside class="sidebar">
       <a routerLink="/inicio" class="marca">
-        <img class="logo-mark" src="/logo.jpg" alt="Café Chanchamayo" />
+        <img class="logo-mark" src="/logo.png" alt="Chanchamayo, café peruano" />
       </a>
       <nav class="nav-links">
-        @for (enlace of enlaces; track enlace.ruta) {
+        @for (enlace of enlacesVisibles; track enlace.ruta) {
           <a [routerLink]="enlace.ruta" routerLinkActive="activo">{{ enlace.icono }} {{ enlace.texto }}</a>
         }
       </nav>
@@ -20,13 +21,6 @@
       </div>
     </aside>
     <div class="workspace">
-      <header class="topbar">
-        <button type="button" class="btn secundario" (click)="tema.alternar()">
-          {{ tema.oscuro() ? 'Modo claro' : 'Modo oscuro' }}
-        </button>
-        <span>{{ auth.sesion()?.nombre }}</span>
-        <button type="button" class="btn secundario" (click)="salir()">Salir</button>
-      </header>
       <main class="contenido">
         <router-outlet />
       </main>
@@ -35,12 +29,26 @@
       {{ tema.oscuro() ? 'Claro' : 'Oscuro' }}
     </button>
     <nav class="tabbar">
-      @for (enlace of enlaces; track enlace.ruta) {
+      @for (enlace of enlacesVisibles; track enlace.ruta) {
         <a [routerLink]="enlace.ruta" routerLinkActive="activo">
           <span>{{ enlace.icono }}</span>
-          {{ enlace.texto === 'Dashboard' ? 'Inicio' : enlace.texto === 'Análisis IA' ? 'Análisis' : enlace.texto }}
+          {{ enlace.texto === 'Dashboard' ? 'Inicio' : enlace.texto === 'Análisis IA' ? 'Análisis' : enlace.texto === 'Solicitudes de registro' ? 'Solicitudes' : enlace.texto }}
         </a>
       }
     </nav>
+    @if (auth.avisoRol(); as aviso) {
+      <div class="modal-fondo encima">
+        <article class="modal">
+          @if (aviso === 'otorgado') {
+            <h2>¡Ahora tienes permisos de administrador!</h2>
+            <p>Se te han otorgado permisos de administrador. Para acceder a las nuevas funcionalidades, debes cerrar sesión e iniciar sesión nuevamente.</p>
+          } @else {
+            <h2>Se retiraron tus permisos de administrador</h2>
+            <p>Ya no tienes acceso al modo Administrador. Para volver al modo Productor, debes cerrar sesión e iniciar sesión nuevamente.</p>
+          }
+          <button type="button" class="btn" (click)="auth.cerrarAvisoRol()">Cerrar</button>
+        </article>
+      </div>
+    }
   </div>
 }

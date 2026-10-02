@@ -3,6 +3,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { VARIEDADES_LOTE } from '../../core/catalogos';
 import { LoteVista, vistasDeLotes } from '../../shared/lote-vista';
 
 @Component({
@@ -21,6 +22,7 @@ export class LotesComponent implements OnInit {
   error = '';
   aviso = '';
   guardando = false;
+  readonly variedades = VARIEDADES_LOTE;
   readonly form;
 
   constructor(
@@ -88,7 +90,7 @@ export class LotesComponent implements OnInit {
       parcelaId: lote.parcelaId,
       fechaCosecha: lote.fechaCosecha,
       cantidadKg: lote.cantidadKg,
-      variedad: lote.variedad,
+      variedad: (this.variedades as readonly string[]).includes(lote.variedad) ? lote.variedad : '',
       observaciones: lote.observaciones ?? '',
     });
     this.modal = true;
@@ -97,6 +99,7 @@ export class LotesComponent implements OnInit {
   registrar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error = this.form.controls.variedad.value ? 'Revisa los datos del lote.' : 'Selecciona una variedad.';
       return;
     }
     this.guardando = true;

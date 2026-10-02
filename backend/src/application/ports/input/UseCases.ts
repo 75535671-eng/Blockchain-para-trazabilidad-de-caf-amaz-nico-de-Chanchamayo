@@ -1,4 +1,5 @@
 import { Actor, ConsultaLoteDto, LoteDto, ParcelaDto, ProductorDto, UsuarioDto } from '../../dto/dtos';
+import { RolUsuario } from '../../domain/entities/Usuario';
 
 export interface RegistrarUsuarioUseCase {
   ejecutar(comando: {
@@ -19,6 +20,79 @@ export interface IniciarSesionUseCase {
   }>;
 }
 
+export interface ConsultarSesionUseCase {
+  ejecutar(actor: Actor): Promise<UsuarioDto>;
+}
+
+export interface CambiarContrasenaUseCase {
+  ejecutar(comando: { actor: Actor; password: string; confirmacion: string }): Promise<UsuarioDto>;
+}
+
+export interface SolicitarRegistroUseCase {
+  ejecutar(comando: {
+    nombre: string;
+    email: string;
+    password: string;
+    confirmacion: string;
+    documento: string;
+    telefono: string;
+    organizacion?: string | null;
+  }): Promise<{ mensaje: string }>;
+}
+
+export interface CrearCuentaProductorUseCase {
+  ejecutar(comando: {
+    actor: Actor;
+    nombre: string;
+    email: string;
+    password: string;
+    documento: string;
+    telefono?: string | null;
+    organizacion?: string | null;
+  }): Promise<{ productor: ProductorDto; usuario: UsuarioDto; passwordTemporal: string }>;
+}
+
+export interface ListarSolicitudesUseCase {
+  ejecutar(actor: Actor): Promise<SolicitudRegistroDto[]>;
+}
+
+export interface AprobarSolicitudUseCase {
+  ejecutar(comando: { actor: Actor; solicitudId: string }): Promise<SolicitudRegistroDto>;
+}
+
+export interface RechazarSolicitudUseCase {
+  ejecutar(comando: { actor: Actor; solicitudId: string; motivo: string }): Promise<SolicitudRegistroDto>;
+}
+
+export interface SolicitudRegistroDto {
+  id: string;
+  nombre: string;
+  documento: string;
+  telefono: string;
+  organizacion: string | null;
+  email: string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  motivoRechazo: string | null;
+  fechaSolicitud: string;
+  fechaResolucion: string | null;
+}
+
+export interface OtorgarAdministradorUseCase {
+  ejecutar(comando: { actor: Actor; productorId: string; email?: string | null; password?: string | null }): Promise<{
+    id: string;
+    nombre: string;
+    rol: RolUsuario;
+  }>;
+}
+
+export interface QuitarAdministradorUseCase {
+  ejecutar(comando: { actor: Actor; productorId: string }): Promise<{
+    id: string;
+    nombre: string;
+    rol: RolUsuario;
+  }>;
+}
+
 export interface RegistrarProductorUseCase {
   ejecutar(comando: {
     actor: Actor;
@@ -35,6 +109,13 @@ export interface ListarProductoresUseCase {
 
 export interface EliminarProductorUseCase {
   ejecutar(comando: { actor: Actor; productorId: string }): Promise<void>;
+}
+
+export interface ConsultarDniProductorUseCase {
+  ejecutar(comando: { actor: Actor; documento: string }): Promise<{
+    nombre: string | null;
+    estado: 'encontrado' | 'no_encontrado' | 'no_configurado' | 'error';
+  }>;
 }
 
 export interface ActualizarProductorUseCase {

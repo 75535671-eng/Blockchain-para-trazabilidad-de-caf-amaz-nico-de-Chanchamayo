@@ -69,7 +69,12 @@
         </label>
         <label class="campo">Fecha de cosecha <input formControlName="fechaCosecha" type="date" /></label>
         <label class="campo">Kilogramos <input formControlName="cantidadKg" type="number" step="0.01" /></label>
-        <label class="campo">Variedad <input formControlName="variedad" /></label>
+        <label class="campo">Variedad
+          <select formControlName="variedad">
+            <option value="" disabled>Selecciona una variedad</option>
+            @for (item of variedades; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
         <label class="campo">Observaciones <input formControlName="observaciones" /></label>
       </div>
       @if (error) { <p class="alerta error">{{ error }}</p> }

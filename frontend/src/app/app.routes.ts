@@ -1,9 +1,14 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { adminGuard, authGuard, cambioGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent) },
   { path: 'registro', loadComponent: () => import('./features/auth/registro.component').then((m) => m.RegistroComponent) },
+  {
+    path: 'cambiar-contrasena',
+    canActivate: [cambioGuard],
+    loadComponent: () => import('./features/auth/cambiar-contrasena.component').then((m) => m.CambiarContrasenaComponent),
+  },
   {
     path: 'inicio',
     canActivate: [authGuard],
@@ -11,8 +16,13 @@ export const routes: Routes = [
   },
   {
     path: 'productores',
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard],
     loadComponent: () => import('./features/productores/productores.component').then((m) => m.ProductoresComponent),
+  },
+  {
+    path: 'solicitudes',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./features/solicitudes/solicitudes.component').then((m) => m.SolicitudesComponent),
   },
   {
     path: 'parcelas',

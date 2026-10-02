@@ -9,20 +9,22 @@ El problema es la dificultad para garantizar una trazabilidad integrada y verifi
 Hexagonal. El detalle está en `docs/ARCHITECTURE.md` y los patrones en `docs/DESIGN-PATTERNS.md`.
 
 ```
-frontend Angular → API Express → caso de uso → dominio → MySQL / API de IA
+frontend Angular → API Express → caso de uso → dominio → PostgreSQL (Supabase) / API de IA
 ```
 
 ## Tecnologías
 
 - Frontend: Angular, TypeScript, HTML y SCSS.
 - Backend: Node.js, Express y TypeScript.
-- Base de datos: MySQL con XAMPP.
+- Base de datos: PostgreSQL en Supabase. El acceso SQL queda en el adaptador del backend.
+- Control de versiones: Git y GitHub.
 - Pruebas de API: Postman o las pruebas automáticas con Supertest.
+- Entorno: Cursor.
 - IA: API compatible con OpenAI, llamada solo desde el backend.
 
 ## Instalación
 
-Requiere Node.js 22 y MySQL de XAMPP.
+Requiere Node.js 22 y un proyecto de Supabase con la migración aplicada.
 
 ```bash
 cd backend
@@ -31,9 +33,9 @@ cd ../frontend
 npm install
 ```
 
-Copia `.env.example` a `backend/.env`. Completa `DB_PASSWORD`, `JWT_SECRET`, `AI_API_KEY` y `SEED_ADMIN_PASSWORD`. No subas ese archivo.
+Copia `.env.example` a `backend/.env`. Completa `DATABASE_URL`, `JWT_SECRET`, `AI_API_KEY`, `SEED_ADMIN_PASSWORD` y `DNI_API_TOKEN`. No subas ese archivo.
 
-Ejecuta `database/schema.sql`. Luego:
+Ejecuta `database/migrations/001_pmv1_inicial.sql` en el SQL Editor de Supabase. El detalle está en `database/README.md` y las decisiones en `docs/DECISIONS.md`. Luego:
 
 ```bash
 cd backend

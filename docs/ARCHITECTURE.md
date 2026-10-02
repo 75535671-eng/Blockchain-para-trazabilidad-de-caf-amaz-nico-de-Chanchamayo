@@ -7,28 +7,28 @@ Angular → HTTP → Controller → Input Port → Use Case → Domain
                                               ↓
                                          Output Port
                                               ↓
-                                   MySQL Adapter / ExternalAIAdapter
+                                   Postgres Adapter / ExternalAIAdapter
 ```
 
-El dominio no importa Express, Angular, MySQL, mysql2, Axios ni un SDK de IA.
+El dominio no importa Express, Angular, PostgreSQL, pg, Supabase, Axios ni un SDK de IA.
 
 ## Capas
 
 - `backend/src/domain`: entidades, value objects y servicios de negocio.
 - `backend/src/application`: casos de uso, DTO y puertos de entrada y salida.
 - `backend/src/adapters/in`: controllers y autenticación HTTP.
-- `backend/src/adapters/out`: MySQL, hash, JWT y la API externa de IA.
+- `backend/src/adapters/out`: PostgreSQL, hash, JWT y la API externa de IA.
 - `backend/src/infrastructure`: configuración, inyección de dependencias y servidor.
 
 ## Decisiones de diseño del PMV1
 
 No son requisitos literales de la consigna. Están aquí para poder defenderlas.
 
-- El registro público crea un usuario `PRODUCTOR` y su ficha de productor en la misma transacción. El administrador inicial se crea con `npm run seed`.
+- El registro público guarda una solicitud `pendiente` con la contraseña en hash. El administrador la aprueba o la rechaza. También puede crear la cuenta directamente; esa cuenta queda activa y obliga a cambiar la contraseña temporal. El administrador inicial se crea con `npm run seed`.
 - El documento del productor acepta DNI de 8 dígitos o RUC de 11 dígitos.
 - La altitud, si se informa, debe estar entre 1 y 6000 m s. n. m. No se impone un recorte geográfico de Chanchamayo.
 - La contraseña exige longitud, letras y números. Es una decisión de seguridad, no del café.
-- El PMV1 no expone borrado de lotes. No es una regla permanente del dominio; simplemente este incremento no tiene ese caso de uso.
+- Eliminar un productor o una parcela falla si todavía tiene registros hijos. Eliminar un lote borra antes sus análisis.
 - El token de sesión viaja en el header `Authorization`. El frontend lo guarda en `sessionStorage`.
 - `analisis_lotes` persiste el indicador de coherencia para consultarlo con el lote sin repetir la llamada a la IA.
 

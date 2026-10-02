@@ -11,6 +11,7 @@ import { AuthService } from '../../core/auth.service';
 })
 export class LoginComponent {
   error = '';
+  verClave = false;
   readonly form;
 
   constructor(
@@ -27,8 +28,9 @@ export class LoginComponent {
   enviar(): void {
     const { email, password } = this.form.getRawValue();
     this.auth.iniciarSesion(email, password).subscribe({
-      next: () => void this.router.navigate(['/inicio']),
-      error: () => (this.error = 'No se pudo iniciar sesión.'),
+      next: () =>
+        void this.router.navigate([this.auth.sesion()?.debeCambiarPassword ? '/cambiar-contrasena' : '/inicio']),
+      error: (error: { error?: { error?: string } }) => (this.error = error.error?.error ?? 'No se pudo iniciar sesión.'),
     });
   }
 }

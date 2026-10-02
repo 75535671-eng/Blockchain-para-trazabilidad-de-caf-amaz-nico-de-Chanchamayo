@@ -8,38 +8,31 @@ Las respuestas de error usan `{ "error": "mensaje" }` y no incluyen stack traces
 
 ### POST /api/auth/register
 
-Crea un usuario productor y su ficha.
-
-```json
-{
-  "nombre": "Ana Quispe",
-  "email": "ana@example.com",
-  "password": "Cafe1234",
-  "documento": "12345678",
-  "telefono": "964000000",
-  "organizacion": "Cooperativa Valle"
-}
-```
+Crea una solicitud `pendiente`. No crea la cuenta ni devuelve token. La contraseña se guarda solo como hash bcrypt. Incluye `confirmacion` y `telefono`.
 
 ### POST /api/auth/login
 
-```json
-{ "email": "ana@example.com", "password": "Cafe1234" }
-```
+Devuelve `token`, `usuario` (con `debeCambiarPassword`) y `productorId`. Una solicitud pendiente o rechazada no inicia sesión. Una cuenta `bloqueada` tampoco.
 
-Devuelve `token`, `usuario` y `productorId`.
+### POST /api/auth/cambiar-contrasena
+
+Requiere sesión. Reemplaza el hash y deja `debe_cambiar_password` en falso. Mientras esa marca esté activa, el resto de rutas autenticadas responde 403.
 
 ## Con Bearer token
 
 ### Productores
 
-- `POST /api/productores` — administrador. HU-002.
+- `POST /api/productores/cuentas` — administrador. Crea la ficha y la cuenta `PRODUCTOR` activa, con cambio obligatorio de contraseña. La respuesta incluye `passwordTemporal` una sola vez.
+- `POST /api/productores` — administrador. Ficha sin cuenta. El teléfono es obligatorio y el DNI o RUC no puede repetirse.
+- `GET /api/solicitudes`, `POST /api/solicitudes/:id/aprobar` y `POST /api/solicitudes/:id/rechazar` — administrador. Aprobar crea usuario y ficha en una transacción. Rechazar guarda el motivo y conserva la solicitud.
 - `GET /api/productores` — administrador ve todos; productor ve el suyo.
+- `GET /api/productores/dni/:documento` — administrador. Con un DNI de 8 dígitos o un RUC de 11, consulta el nombre en api.apis.net.pe usando `DNI_API_URL`, `RUC_API_URL` y `DNI_API_TOKEN`. Si la API falla o no encuentra el documento, responde sin nombre y el registro manual sigue disponible.
 - `PUT /api/productores/:id` — administrador.
+- `DELETE /api/productores/:id` — administrador. Borra en una transacción la ficha, la cuenta vinculada, sus parcelas, lotes, análisis y solicitudes propias. No toca datos de otros productores. Deja un registro de auditoría con la fecha, el administrador y el identificador del productor, sin datos personales.
 
 ### Parcelas
 
-- `POST /api/parcelas`
+- `POST /api/parcelas` — el distrito debe ser La Merced, Perené, Pichanaqui, San Ramón, San Luis de Shuaro, Vitoc o Sangani, y el productor debe existir.
 - `GET /api/parcelas`
 
 ```json
@@ -57,7 +50,7 @@ Devuelve `token`, `usuario` y `productorId`.
 
 ### Lotes
 
-- `POST /api/lotes`
+- `POST /api/lotes` — la variedad debe ser Caturra, Typica, Bourbon o Pache.
 - `GET /api/lotes`
 - `GET /api/lotes/:id` — lote, parcela, productor y último análisis.
 - `POST /api/lotes/:id/analisis` — indicador de coherencia del registro.
@@ -72,4 +65,4 @@ Devuelve `token`, `usuario` y `productorId`.
 }
 ```
 
-El análisis devuelve la consulta del lote con `ultimoAnalisis`: estrategia, clasificación (`COHERENTE`, `REVISAR` o `INSUFICIENTE`), resumen, observaciones, confianza y proveedor.
+El análisis devuelve la consulta del lote con `ultimoAnalisis`: estrategia, clasificación de coherencia del registro (`COHERENTE`, `REVISAR` o `INSUFICIENTE`), resumen, observaciones, confianza y proveedor. No certifica calidad del café. Si el proveedor externo falla, la API responde con error y no guarda un análisis simulado.

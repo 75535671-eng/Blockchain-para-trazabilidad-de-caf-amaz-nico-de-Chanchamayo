@@ -1,9 +1,9 @@
 import path from 'path';
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
 import { Usuario } from '../../domain/entities/Usuario';
 import { BcryptPasswordHasher } from '../../adapters/out/security/SecurityAdapters';
 import { leerConfig } from './container';
+import { crearPoolPostgres } from './postgres';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
@@ -15,15 +15,12 @@ async function seed(): Promise<void> {
   if (!password) {
     throw new Error('SEED_ADMIN_PASSWORD es obligatorio para crear el administrador.');
   }
-  const pool = mysql.createPool({
-    host: config.dbHost,
-    port: config.dbPort,
-    database: config.dbName,
-    user: config.dbUser,
-    password: config.dbPassword,
-  });
-  const [rows] = await pool.query<mysql.RowDataPacket[]>('SELECT id FROM usuarios WHERE email = ?', [email]);
-  if (rows.length > 0) {
+  if (!config.databaseUrl) {
+    throw new Error('DATABASE_URL es obligatorio.');
+  }
+  const pool = crearPoolPostgres(config.databaseUrl);
+  const existente = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
+  if (existente.rows.length > 0) {
     console.log('El administrador ya existe.');
     await pool.end();
     return;
@@ -37,7 +34,7 @@ async function seed(): Promise<void> {
     rol: 'ADMINISTRADOR',
   });
   await pool.query(
-    'INSERT INTO usuarios (id, nombre, email, password_hash, rol) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO usuarios (id, nombre, email, password_hash, rol) VALUES ($1, $2, $3, $4, $5)',
     [usuario.id, usuario.nombre, usuario.email.valor, usuario.passwordHash, usuario.rol],
   );
   console.log(`Administrador creado: ${email}`);

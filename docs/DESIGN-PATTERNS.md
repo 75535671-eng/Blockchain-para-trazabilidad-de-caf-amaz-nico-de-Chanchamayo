@@ -6,21 +6,21 @@ Los cinco patrones resuelven una necesidad del incremento. No decoran el código
 
 Problema: los casos de uso necesitan guardar y consultar usuarios, productores, parcelas, lotes y análisis sin conocer SQL.
 
-Dónde: `backend/src/application/ports/output/OutputPorts.ts` define los puertos. `backend/src/adapters/out/persistence/MySQLRepositories.ts` los implementa.
+Dónde: `backend/src/application/ports/output/OutputPorts.ts` define los puertos. `backend/src/adapters/out/persistence/PostgresRepositories.ts` los implementa.
 
-Por qué: el dominio y la aplicación se prueban con repositorios en memoria. MySQL puede cambiarse sin tocar las reglas del lote.
+Por qué: el dominio y la aplicación se prueban con repositorios en memoria. PostgreSQL puede cambiarse sin tocar las reglas del lote.
 
-Ejemplo: `RegistrarLote` depende de `LoteRepositoryPort`. En producción lo implementa `MySQLLoteRepository`.
+Ejemplo: `RegistrarLote` depende de `LoteRepositoryPort`. En producción lo implementa `PostgresLoteRepository`.
 
 ## Dependency Injection
 
-Problema: si el caso de uso crea `new MySQLLoteRepository()`, queda atado a MySQL.
+Problema: si el caso de uso crea `new PostgresLoteRepository()`, queda atado a PostgreSQL.
 
 Dónde: `backend/src/infrastructure/configuration/container.ts` es la composición. Los constructores de los casos de uso reciben interfaces.
 
 Por qué: las pruebas arman otro contenedor con dobles en memoria y un adaptador de IA falso.
 
-Ejemplo: `createProductionContainer()` inyecta repositorios MySQL, `BcryptPasswordHasher`, `JwtTokenProvider` y `ExternalAIAdapter`.
+Ejemplo: `createProductionContainer()` inyecta repositorios PostgreSQL, `BcryptPasswordHasher`, `JwtTokenProvider` y `ExternalAIAdapter`.
 
 ## Factory Method
 
@@ -44,9 +44,9 @@ Ejemplo: `AnalizarLote` no contiene un condicional de negocio sobre la altitud. 
 
 ## Adapter
 
-Problema: la API de IA y MySQL hablan otro idioma que el núcleo.
+Problema: la API de IA y PostgreSQL hablan otro idioma que el núcleo.
 
-Dónde: `ExternalAIAdapter` en `backend/src/adapters/out/ai/ExternalAIAdapter.ts` implementa `AIServicePort`. Los repositorios MySQL implementan los puertos de persistencia. Los controllers traducen HTTP a comandos.
+Dónde: `ExternalAIAdapter` en `backend/src/adapters/out/ai/ExternalAIAdapter.ts` implementa `AIServicePort`. Los repositorios PostgreSQL implementan los puertos de persistencia. Los controllers traducen HTTP a comandos.
 
 Por qué: el proveedor se cambia con `AI_API_BASE_URL`, `AI_MODEL` y `AI_PROVIDER`, sin modificar el caso de uso. La clave permanece en el entorno del backend.
 

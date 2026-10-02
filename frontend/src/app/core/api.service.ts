@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { ConsultaLote, Lote, Parcela, Productor } from './modelos';
+import { ConsultaLote, Lote, Parcela, Productor, SolicitudRegistro } from './modelos';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -15,12 +15,60 @@ export class ApiService {
     return this.http.post<Productor>(`${environment.apiUrl}/productores`, datos);
   }
 
+  crearCuentaProductor(datos: {
+    nombre: string;
+    documento: string;
+    telefono: string;
+    organizacion?: string;
+    email: string;
+    password: string;
+  }) {
+    return this.http.post<{
+      productor: Productor;
+      usuario: { id: string; nombre: string; email: string };
+      passwordTemporal: string;
+    }>(`${environment.apiUrl}/productores/cuentas`, datos);
+  }
+
+  listarSolicitudes() {
+    return this.http.get<SolicitudRegistro[]>(`${environment.apiUrl}/solicitudes`);
+  }
+
+  aprobarSolicitud(id: string) {
+    return this.http.post<SolicitudRegistro>(`${environment.apiUrl}/solicitudes/${id}/aprobar`, {});
+  }
+
+  rechazarSolicitud(id: string, motivo: string) {
+    return this.http.post<SolicitudRegistro>(`${environment.apiUrl}/solicitudes/${id}/rechazar`, { motivo });
+  }
+
   actualizarProductor(id: string, datos: { nombre: string; telefono?: string; organizacion?: string }) {
     return this.http.put<Productor>(`${environment.apiUrl}/productores/${id}`, datos);
   }
 
   eliminarProductor(id: string) {
     return this.http.delete(`${environment.apiUrl}/productores/${id}`);
+  }
+
+  otorgarAdministrador(id: string, datos: { email?: string; password?: string } = {}) {
+    return this.http.post<{ id: string; nombre: string; rol: 'ADMINISTRADOR' }>(
+      `${environment.apiUrl}/productores/${id}/rol-administrador`,
+      datos,
+    );
+  }
+
+  quitarAdministrador(id: string) {
+    return this.http.post<{ id: string; nombre: string; rol: 'PRODUCTOR' }>(
+      `${environment.apiUrl}/productores/${id}/rol-productor`,
+      {},
+    );
+  }
+
+  consultarDni(documento: string) {
+    return this.http.get<{
+      nombre: string | null;
+      estado: 'encontrado' | 'no_encontrado' | 'no_configurado' | 'error';
+    }>(`${environment.apiUrl}/productores/dni/${encodeURIComponent(documento)}`);
   }
 
   listarParcelas() {
