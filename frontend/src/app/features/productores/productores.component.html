@@ -76,7 +76,7 @@
         <label class="campo">DNI o RUC
           <input formControlName="documento" inputmode="numeric" maxlength="11" [readOnly]="!!editandoId" (input)="alCambiarDocumento()" />
         </label>
-        <label class="campo">Apellidos y nombres <input formControlName="nombre" /></label>
+        <label class="campo">Apellidos y nombres <input formControlName="nombre" (input)="alEditarNombre()" /></label>
         <label class="campo">Teléfono <input formControlName="telefono" /></label>
         <label class="campo">Organización <input formControlName="organizacion" /></label>
         @if (!editandoId) {
@@ -89,8 +89,8 @@
       @if (!editandoId) {
         <button type="button" class="btn secundario" style="margin-top: 0.6rem" (click)="generarClave()">Generar contraseña</button>
       }
-      @if (consultandoDni) { <p class="aviso-suave">Consultando documento…</p> }
-      @if (avisoDni) { <p class="aviso-suave">{{ avisoDni }}</p> }
+      @if (consultaDoc.consultando) { <p class="aviso-suave">Consultando documento…</p> }
+      @if (consultaDoc.aviso) { <p class="aviso-suave">{{ consultaDoc.aviso }}</p> }
       @if (mensajeValidacion) { <p class="alerta error">{{ mensajeValidacion }}</p> }
       @if (errorFormulario) { <p class="alerta error">{{ errorFormulario }}</p> }
       <div class="acciones" style="margin-top: 1rem">
@@ -187,13 +187,14 @@
       <article class="modal">
         <h2>Confirmación definitiva de eliminación</h2>
         <p>¿Estás completamente seguro? Se eliminarán permanentemente el productor, su cuenta de acceso y todos los registros asociados. No podrás recuperar esta información después de confirmar.</p>
-        <label>
+        <label class="campo">
           Escribe el nombre completo del productor
           <input [(ngModel)]="nombreConfirmacion" name="nombreConfirmacion" autocomplete="off" [attr.aria-label]="'Nombre de ' + pendiente.productor.nombre" />
         </label>
+        <p class="aviso-suave">El botón se habilita cuando el nombre escrito coincida con {{ pendiente.productor.nombre }}.</p>
         <div class="acciones" style="margin-top: 1rem">
           <button type="button" class="btn secundario" (click)="cancelarEliminacion()" [disabled]="eliminando">Cancelar</button>
-          <button type="button" class="btn" (click)="confirmarEliminacion()" [disabled]="!puedeEliminar || eliminando">Eliminar permanentemente</button>
+          <button type="button" class="btn" (click)="confirmarEliminacion()" [disabled]="!puedeEliminar || eliminando">{{ eliminando ? 'Eliminando…' : 'Eliminar permanentemente' }}</button>
         </div>
       </article>
     </div>

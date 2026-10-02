@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { Productor } from '../../core/modelos';
+import { ConsultaDocumento } from '../../shared/consulta-documento';
 
 @Component({
   selector: 'app-productores',
   imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './productores.component.html',
 })
-export class ProductoresComponent implements OnInit {
+export class ProductoresComponent implements OnInit, OnDestroy {
   productores: Productor[] = [];
   filtro = '';
   modal = false;
@@ -28,11 +29,9 @@ export class ProductoresComponent implements OnInit {
   nombreConfirmacion = '';
   eliminando = false;
   copiado = false;
-  avisoDni = '';
   duplicado = false;
-  consultandoDni = false;
   guardando = false;
-  private dniConsultado = '';
+  readonly consultaDoc = new ConsultaDocumento();
   readonly form;
 
   constructor(
@@ -52,6 +51,10 @@ export class ProductoresComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+  }
+
+  ngOnDestroy(): void {
+    this.consultaDoc.destruir();
   }
 
   get visibles(): Productor[] {
@@ -92,18 +95,16 @@ export class ProductoresComponent implements OnInit {
     this.editandoId = null;
     this.form.reset();
     this.errorFormulario = '';
-    this.avisoDni = '';
     this.duplicado = false;
-    this.dniConsultado = '';
+    this.consultaDoc.reiniciar();
     this.modal = true;
   }
 
   editar(productor: Productor): void {
     this.editandoId = productor.id;
     this.errorFormulario = '';
-    this.avisoDni = '';
     this.duplicado = false;
-    this.dniConsultado = '';
+    this.consultaDoc.reiniciar();
     this.form.setValue({
       documento: productor.documento,
       nombre: productor.nombre,
@@ -119,42 +120,19 @@ export class ProductoresComponent implements OnInit {
     if (this.editandoId) {
       return;
     }
-    const documento = this.form.controls.documento.value.trim();
-    if (!/^(\d{8}|\d{11})$/.test(documento)) {
-      this.dniConsultado = '';
-      this.avisoDni = '';
-      this.consultandoDni = false;
-      return;
+    const documento = this.form.controls.documento.value.replace(/\D/g, '').slice(0, 11);
+    if (documento !== this.form.controls.documento.value) {
+      this.form.controls.documento.setValue(documento);
     }
-    if (documento === this.dniConsultado) {
-      return;
-    }
-    this.dniConsultado = documento;
-    this.consultandoDni = true;
-    this.avisoDni = '';
-    this.api.consultarDni(documento).subscribe({
-      next: (resultado) => {
-        if (this.form.controls.documento.value.trim() !== documento) {
-          return;
-        }
-        this.consultandoDni = false;
-        if (resultado.estado === 'encontrado' && resultado.nombre) {
-          this.form.controls.nombre.setValue(resultado.nombre);
-          return;
-        }
-        if (resultado.estado === 'no_configurado') {
-          return;
-        }
-        this.avisoDni = 'No se pudo obtener el nombre. Puedes ingresarlo manualmente.';
-      },
-      error: () => {
-        if (this.form.controls.documento.value.trim() !== documento) {
-          return;
-        }
-        this.consultandoDni = false;
-        this.avisoDni = 'No se pudo consultar el DNI. Puedes ingresar los datos manualmente.';
-      },
-    });
+    this.consultaDoc.alCambiar(
+      documento,
+      (valor) => this.api.consultarDni(valor),
+      (nombre) => this.form.controls.nombre.setValue(nombre),
+    );
+  }
+
+  alEditarNombre(): void {
+    this.consultaDoc.anotarNombre(this.form.controls.nombre.value);
   }
 
   registrar(): void {
@@ -338,7 +316,8 @@ export class ProductoresComponent implements OnInit {
   }
 
   get puedeEliminar(): boolean {
-    return this.nombreConfirmacion === this.eliminacion?.productor.nombre;
+    const esperado = this.eliminacion?.productor.nombre.trim() ?? '';
+    return this.nombreConfirmacion.trim() === esperado && esperado.length > 0;
   }
 
   cancelarEliminacion(): void {

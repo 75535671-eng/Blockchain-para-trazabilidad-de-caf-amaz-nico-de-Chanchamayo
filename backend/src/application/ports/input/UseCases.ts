@@ -1,5 +1,5 @@
 import { Actor, ConsultaLoteDto, LoteDto, ParcelaDto, ProductorDto, UsuarioDto } from '../../dto/dtos';
-import { RolUsuario } from '../../domain/entities/Usuario';
+import { RolUsuario } from '../../../domain/entities/Usuario';
 
 export interface RegistrarUsuarioUseCase {
   ejecutar(comando: {
@@ -113,6 +113,10 @@ export interface EliminarProductorUseCase {
 
 export interface ConsultarDniProductorUseCase {
   ejecutar(comando: { actor: Actor; documento: string }): Promise<{
+    nombre: string | null;
+    estado: 'encontrado' | 'no_encontrado' | 'no_configurado' | 'error';
+  }>;
+  consultarPublico(documento: string): Promise<{
     nombre: string | null;
     estado: 'encontrado' | 'no_encontrado' | 'no_configurado' | 'error';
   }>;

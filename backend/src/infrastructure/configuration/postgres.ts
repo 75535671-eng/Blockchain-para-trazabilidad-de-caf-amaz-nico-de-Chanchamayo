@@ -7,7 +7,7 @@ export function crearPoolPostgres(databaseUrl: string): Pool {
   const local = /@(localhost|127\.0\.0\.1)(:|\/)/.test(databaseUrl);
   return new Pool({
     connectionString: databaseUrl,
-    max: 10,
+    max: process.env.VERCEL ? 1 : 10,
     // Supabase presenta un certificado que Node no valida con la CA por defecto.
     // La autorización sigue en el backend: esta conexión no usa la clave anónima.
     ssl: local ? undefined : { rejectUnauthorized: false },

@@ -202,11 +202,15 @@ export class ConsultarDniProductor implements ConsultarDniProductorUseCase {
 
   async ejecutar(comando: { actor: Actor; documento: string }) {
     exigirAdministrador(comando.actor);
-    const documento = comando.documento.trim();
-    if (!/^(\d{8}|\d{11})$/.test(documento)) {
+    return this.consultarPublico(comando.documento);
+  }
+
+  async consultarPublico(documento: string) {
+    const limpio = documento.trim();
+    if (!/^(\d{8}|\d{11})$/.test(limpio)) {
       throw new ValidationError('La consulta automática solo aplica a un DNI de 8 dígitos o un RUC de 11 dígitos.');
     }
-    return this.consulta.consultar(documento);
+    return this.consulta.consultar(limpio);
   }
 }
 

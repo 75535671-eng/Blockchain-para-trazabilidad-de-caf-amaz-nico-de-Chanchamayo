@@ -71,6 +71,13 @@ export class ApiService {
     }>(`${environment.apiUrl}/productores/dni/${encodeURIComponent(documento)}`);
   }
 
+  consultarDocumentoRegistro(documento: string) {
+    return this.http.get<{
+      nombre: string | null;
+      estado: 'encontrado' | 'no_encontrado' | 'no_configurado' | 'error';
+    }>(`${environment.apiUrl}/auth/documento/${encodeURIComponent(documento)}`);
+  }
+
   listarParcelas() {
     return this.http.get<Parcela[]>(`${environment.apiUrl}/parcelas`);
   }

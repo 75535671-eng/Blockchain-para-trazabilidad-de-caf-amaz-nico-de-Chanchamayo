@@ -204,8 +204,11 @@ h1 {
   padding: 2.6rem 1.4rem 2rem 68%;
 }
 
-@media (max-width: 800px) {
-  .auth-pagina { padding: 0.6rem; align-items: start; }
+@media (max-width: 900px) {
+  .auth-pagina {
+    padding: max(0.6rem, env(safe-area-inset-top)) 0.6rem max(0.6rem, env(safe-area-inset-bottom));
+    align-items: start;
+  }
   .auth-shell { min-height: 0; display: flex; flex-direction: column; }
   .curva { display: none; }
   .curva-movil { display: block; order: 0; }
@@ -214,7 +217,7 @@ h1 {
     inset: auto;
     order: -1;
     width: 100%;
-    min-height: 240px;
+    min-height: 220px;
     padding: 1.4rem 1.2rem;
   }
   .auth-form {
@@ -230,5 +233,10 @@ h1 {
   .login-shell .auth-hero {
     padding: 1.4rem 1.2rem;
   }
+}
+
+@media (max-width: 720px) {
   .form-grid { grid-template-columns: 1fr; }
+  .auth-hero { min-height: 180px; }
+  h1 { font-size: 1.5rem; }
 }
