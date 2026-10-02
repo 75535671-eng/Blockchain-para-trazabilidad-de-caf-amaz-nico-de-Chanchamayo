@@ -18,14 +18,20 @@
       } @else {
         <form [formGroup]="form" (ngSubmit)="enviar()">
           <div class="form-grid">
-            <label class="campo">Nombre completo <input formControlName="nombre" /></label>
-            <label class="campo">DNI o RUC <input formControlName="documento" inputmode="numeric" maxlength="11" /></label>
+            <label class="campo">DNI o RUC
+              <input formControlName="documento" inputmode="numeric" maxlength="11" autocomplete="off" (input)="alCambiarDocumento()" />
+            </label>
+            <label class="campo">Apellidos y nombres
+              <input formControlName="nombre" autocomplete="name" (input)="alEditarNombre()" />
+            </label>
             <label class="campo">Teléfono <input formControlName="telefono" /></label>
             <label class="campo">Organización <input formControlName="organizacion" /></label>
             <label class="campo">Correo electrónico <input formControlName="email" type="email" /></label>
             <label class="campo">Contraseña <input formControlName="password" type="password" autocomplete="new-password" /></label>
             <label class="campo">Confirmar contraseña <input formControlName="confirmacion" type="password" autocomplete="new-password" /></label>
           </div>
+          @if (consultaDoc.consultando) { <p class="aviso-suave">Consultando documento…</p> }
+          @if (consultaDoc.aviso) { <p class="aviso-suave">{{ consultaDoc.aviso }}</p> }
           @if (error) { <p class="alerta error">{{ error }}</p> }
           <button class="btn bloque" type="submit" [disabled]="enviando">{{ enviando ? 'Enviando…' : 'Enviar solicitud' }}</button>
           <a class="btn secundario bloque" routerLink="/login">Ya tengo cuenta</a>

@@ -41,17 +41,13 @@ export class ParcelasComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const propio = this.auth.productorId();
-    if (propio) {
-      this.form.controls.productorId.setValue(propio);
-    }
-    this.api.listarProductores().subscribe((productores) => {
-      this.productores = productores;
-      if (!this.form.controls.productorId.value && productores[0]) {
-        this.form.controls.productorId.setValue(productores[0].id);
+    if (this.auth.sesion()?.rol !== 'ADMINISTRADOR') {
+      const propio = this.auth.productorId();
+      if (propio) {
+        this.form.controls.productorId.setValue(propio);
       }
-      this.sincronizarBusquedaProductor();
-    });
+    }
+    this.cargarProductores();
     this.cargar();
   }
 
@@ -74,7 +70,8 @@ export class ParcelasComponent implements OnInit {
 
   get productoresFiltrados(): Productor[] {
     const texto = this.busquedaProductor.trim().toLowerCase();
-    if (!texto) {
+    const seleccionado = this.productores.find((productor) => productor.id === this.form.controls.productorId.value);
+    if (!texto || texto === seleccionado?.nombre.trim().toLowerCase()) {
       return this.productores;
     }
     return this.productores.filter((productor) => productor.nombre.toLowerCase().includes(texto));
@@ -87,14 +84,22 @@ export class ParcelasComponent implements OnInit {
     });
   }
 
+  cargarProductores(): void {
+    this.api.listarProductores().subscribe({
+      next: (productores) => (this.productores = productores),
+      error: () => (this.error = 'No se pudieron consultar los productores.'),
+    });
+  }
+
   abrirRegistro(): void {
     this.editandoId = null;
     this.error = '';
-    const propio = this.auth.productorId() || this.productores[0]?.id || '';
+    const propio = this.auth.sesion()?.rol === 'ADMINISTRADOR' ? '' : this.auth.productorId() || '';
     this.form.reset({ productorId: propio, nombre: '', distrito: '', localidad: '', areaHectareas: 1, altitudMsnm: null });
-    this.sincronizarBusquedaProductor();
+    this.busquedaProductor = '';
     this.listaProductoresAbierta = false;
     this.modal = true;
+    this.cargarProductores();
   }
 
   editar(parcela: Parcela): void {

@@ -26,6 +26,7 @@ export function createApp(container: AppContainer): Express {
   });
 
   app.post('/api/auth/register', asyncHandler(container.auth.registrarUsuario));
+  app.get('/api/auth/documento/:documento', asyncHandler(container.auth.consultarDocumento));
   app.post('/api/auth/login', asyncHandler(container.auth.login));
   app.get('/api/auth/sesion', requiereAuth, asyncHandler(container.auth.sesion));
   app.post('/api/auth/cambiar-contrasena', requiereAuth, asyncHandler(container.auth.cambiarContrasena));

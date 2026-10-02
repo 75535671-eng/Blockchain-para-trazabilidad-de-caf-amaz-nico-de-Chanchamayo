@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { ApiService } from '../../core/api.service';
+import { ConsultaDocumento } from '../../shared/consulta-documento';
 
 @Component({
   selector: 'app-registro',
@@ -9,15 +11,17 @@ import { AuthService } from '../../core/auth.service';
   templateUrl: './registro.component.html',
   styleUrl: './auth.component.scss',
 })
-export class RegistroComponent {
+export class RegistroComponent implements OnDestroy {
   error = '';
   mensaje = '';
   enviando = false;
+  readonly consultaDoc = new ConsultaDocumento();
   readonly form;
 
   constructor(
     fb: FormBuilder,
     private readonly auth: AuthService,
+    private readonly api: ApiService,
   ) {
     this.form = fb.nonNullable.group({
       nombre: ['', Validators.required],
@@ -28,6 +32,26 @@ export class RegistroComponent {
       password: ['', Validators.required],
       confirmacion: ['', Validators.required],
     });
+  }
+
+  ngOnDestroy(): void {
+    this.consultaDoc.destruir();
+  }
+
+  alCambiarDocumento(): void {
+    const documento = this.form.controls.documento.value.replace(/\D/g, '').slice(0, 11);
+    if (documento !== this.form.controls.documento.value) {
+      this.form.controls.documento.setValue(documento);
+    }
+    this.consultaDoc.alCambiar(
+      documento,
+      (valor) => this.api.consultarDocumentoRegistro(valor),
+      (nombre) => this.form.controls.nombre.setValue(nombre),
+    );
+  }
+
+  alEditarNombre(): void {
+    this.consultaDoc.anotarNombre(this.form.controls.nombre.value);
   }
 
   enviar(): void {
@@ -47,6 +71,7 @@ export class RegistroComponent {
       next: (respuesta) => {
         this.enviando = false;
         this.mensaje = respuesta.mensaje;
+        this.consultaDoc.reiniciar();
         this.form.reset();
       },
       error: (error: { error?: { error?: string } }) => {

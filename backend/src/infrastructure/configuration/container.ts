@@ -75,6 +75,9 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
   const solicitudes = new PostgresSolicitudRegistroRepository(pool);
   const hasher = new BcryptPasswordHasher();
   const tokens = new JwtTokenProvider(config.jwtSecret, config.jwtExpiresIn);
+  const consultaDni = new ConsultarDniProductor(
+    new ConsultaDniAdapter({ dniUrl: config.dniApiUrl, rucUrl: config.rucApiUrl, token: config.dniApiToken }),
+  );
   const selector = new SelectorEstrategiaAnalisis(new EstrategiaConAltitud(), new EstrategiaSinAltitud());
   const ia = new ExternalAIAdapter({
     baseUrl: config.aiBaseUrl,
@@ -91,15 +94,14 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
       new IniciarSesion(usuarios, productores, solicitudes, hasher, tokens),
       new ConsultarSesion(usuarios),
       new CambiarContrasena(usuarios, hasher),
+      consultaDni,
     ),
     productores: new ProductorController(
       new RegistrarProductor(productores),
       new ListarProductores(productores, usuarios),
       new ActualizarProductor(productores),
       new EliminarProductor(productores),
-      new ConsultarDniProductor(
-        new ConsultaDniAdapter({ dniUrl: config.dniApiUrl, rucUrl: config.rucApiUrl, token: config.dniApiToken }),
-      ),
+      consultaDni,
       new OtorgarAdministrador(usuarios, productores, hasher),
       new QuitarAdministrador(usuarios, productores),
       new CrearCuentaProductor(usuarios, productores, new PostgresRegistroCuenta(pool), hasher),

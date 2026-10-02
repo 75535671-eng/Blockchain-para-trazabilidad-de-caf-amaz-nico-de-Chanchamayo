@@ -5,19 +5,40 @@
   </button>
   <router-outlet />
 } @else {
-  <div class="shell">
-    <aside class="sidebar">
-      <a routerLink="/inicio" class="marca">
+  <div class="shell" [class.menu-activo]="menuAbierto">
+    <header class="topbar">
+      <button
+        type="button"
+        class="hamburguesa"
+        (click)="alternarMenu()"
+        [attr.aria-expanded]="menuAbierto"
+        aria-controls="menu-app"
+        [attr.aria-label]="menuAbierto ? 'Cerrar menú' : 'Abrir menú'"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <span class="topbar-marca">Café Chanchamayo</span>
+    </header>
+    @if (menuAbierto) {
+      <button type="button" class="menu-fondo" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
+    }
+    <aside id="menu-app" class="sidebar" [class.abierto]="menuAbierto">
+      <button type="button" class="btn secundario cerrar-menu" (click)="cerrarMenu()">Cerrar</button>
+      <a routerLink="/inicio" class="marca" (click)="cerrarMenu()">
         <img class="logo-mark" src="/logo.png" alt="Chanchamayo, café peruano" />
       </a>
       <nav class="nav-links">
         @for (enlace of enlacesVisibles; track enlace.ruta) {
-          <a [routerLink]="enlace.ruta" routerLinkActive="activo">{{ enlace.icono }} {{ enlace.texto }}</a>
+          <a [routerLink]="enlace.ruta" routerLinkActive="activo" (click)="cerrarMenu()">{{ enlace.icono }} {{ enlace.texto }}</a>
         }
       </nav>
       <div class="nav-foot">
-        <button type="button" (click)="tema.alternar()">{{ tema.oscuro() ? '☀ Modo claro' : '☾ Modo oscuro' }}</button>
-        <button type="button" (click)="salir()">⎋ Cerrar sesión</button>
+        <button type="button" (click)="tema.alternar()">
+          {{ tema.oscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro' }}
+        </button>
+        <button type="button" (click)="pedirCierre()">Cerrar sesión</button>
       </div>
     </aside>
     <div class="workspace">
@@ -25,17 +46,6 @@
         <router-outlet />
       </main>
     </div>
-    <button type="button" class="btn secundario tema-movil" (click)="tema.alternar()">
-      {{ tema.oscuro() ? 'Claro' : 'Oscuro' }}
-    </button>
-    <nav class="tabbar">
-      @for (enlace of enlacesVisibles; track enlace.ruta) {
-        <a [routerLink]="enlace.ruta" routerLinkActive="activo">
-          <span>{{ enlace.icono }}</span>
-          {{ enlace.texto === 'Dashboard' ? 'Inicio' : enlace.texto === 'Análisis IA' ? 'Análisis' : enlace.texto === 'Solicitudes de registro' ? 'Solicitudes' : enlace.texto }}
-        </a>
-      }
-    </nav>
     @if (auth.avisoRol(); as aviso) {
       <div class="modal-fondo encima">
         <article class="modal">
@@ -50,5 +60,17 @@
         </article>
       </div>
     }
+  </div>
+}
+@if (confirmarCierre) {
+  <div class="modal-fondo encima">
+    <article class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
+      <h2 id="titulo-cierre">Cerrar sesión</h2>
+      <p>¿Estás seguro de que deseas cerrar sesión?</p>
+      <div class="acciones">
+        <button type="button" class="btn secundario" (click)="cancelarCierre()">Cancelar</button>
+        <button type="button" class="btn" (click)="confirmarSalida()">Cerrar sesión</button>
+      </div>
+    </article>
   </div>
 }

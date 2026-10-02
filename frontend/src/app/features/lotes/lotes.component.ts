@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { VARIEDADES_LOTE } from '../../core/catalogos';
+import { Parcela, Productor } from '../../core/modelos';
 import { LoteVista, vistasDeLotes } from '../../shared/lote-vista';
 
 @Component({
@@ -13,8 +14,11 @@ import { LoteVista, vistasDeLotes } from '../../shared/lote-vista';
 })
 export class LotesComponent implements OnInit {
   vistas: LoteVista[] = [];
-  parcelas: { id: string; nombre: string; distrito: string }[] = [];
+  parcelas: Parcela[] = [];
+  productores: Productor[] = [];
   filtro = '';
+  busquedaParcela = '';
+  listaParcelasAbierta = false;
   modal = false;
   editandoId: string | null = null;
   codigoEdicion = '';
@@ -57,10 +61,8 @@ export class LotesComponent implements OnInit {
     }).subscribe({
       next: (datos) => {
         this.parcelas = datos.parcelas;
+        this.productores = datos.productores;
         this.vistas = vistasDeLotes(datos.lotes, datos.parcelas, datos.productores);
-        if (!this.form.controls.parcelaId.value && datos.parcelas[0]) {
-          this.form.controls.parcelaId.setValue(datos.parcelas[0].id);
-        }
       },
       error: () => (this.error = 'No se pudieron consultar los lotes.'),
     });
@@ -71,14 +73,17 @@ export class LotesComponent implements OnInit {
     this.codigoEdicion = '';
     this.estadoEdicion = '';
     this.error = '';
+    this.busquedaParcela = '';
+    this.listaParcelasAbierta = false;
     this.form.reset({
-      parcelaId: this.parcelas[0]?.id ?? '',
+      parcelaId: '',
       fechaCosecha: '',
       cantidadKg: 1,
       variedad: '',
       observaciones: '',
     });
     this.modal = true;
+    this.cargar();
   }
 
   editar(lote: LoteVista): void {
@@ -93,13 +98,60 @@ export class LotesComponent implements OnInit {
       variedad: (this.variedades as readonly string[]).includes(lote.variedad) ? lote.variedad : '',
       observaciones: lote.observaciones ?? '',
     });
+    this.busquedaParcela = this.etiquetaParcela(lote.parcelaId);
+    this.listaParcelasAbierta = false;
     this.modal = true;
+  }
+
+  get parcelasFiltradas(): Parcela[] {
+    const texto = this.busquedaParcela.trim().toLowerCase();
+    const etiqueta = this.etiquetaParcela(this.form.controls.parcelaId.value).toLowerCase();
+    if (!texto || (etiqueta !== '—' && texto === etiqueta)) {
+      return this.parcelas;
+    }
+    return this.parcelas.filter((parcela) => this.etiquetaParcela(parcela.id).toLowerCase().includes(texto));
+  }
+
+  nombreProductor(id: string): string {
+    return this.productores.find((productor) => productor.id === id)?.nombre ?? 'Sin productor';
+  }
+
+  etiquetaParcela(id: string): string {
+    const parcela = this.parcelas.find((item) => item.id === id);
+    if (!parcela) {
+      return '—';
+    }
+    return `${parcela.nombre} — ${this.nombreProductor(parcela.productorId)}`;
+  }
+
+  buscarParcela(evento: Event): void {
+    this.busquedaParcela = (evento.target as HTMLInputElement).value;
+    this.listaParcelasAbierta = true;
+    const etiqueta = this.etiquetaParcela(this.form.controls.parcelaId.value);
+    if (etiqueta === '—' || etiqueta.toLowerCase() !== this.busquedaParcela.trim().toLowerCase()) {
+      this.form.controls.parcelaId.setValue('');
+    }
+  }
+
+  elegirParcela(parcela: Parcela): void {
+    this.form.controls.parcelaId.setValue(parcela.id);
+    this.busquedaParcela = this.etiquetaParcela(parcela.id);
+    this.listaParcelasAbierta = false;
+  }
+
+  cerrarListaParcelas(): void {
+    this.listaParcelasAbierta = false;
+    this.form.controls.parcelaId.markAsTouched();
   }
 
   registrar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error = this.form.controls.variedad.value ? 'Revisa los datos del lote.' : 'Selecciona una variedad.';
+      this.error = !this.form.controls.parcelaId.value
+        ? 'Selecciona una parcela registrada.'
+        : this.form.controls.variedad.value
+          ? 'Revisa los datos del lote.'
+          : 'Selecciona una variedad.';
       return;
     }
     this.guardando = true;

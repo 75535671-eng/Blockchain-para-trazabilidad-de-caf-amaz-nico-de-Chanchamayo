@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   AprobarSolicitudUseCase,
   CambiarContrasenaUseCase,
+  ConsultarDniProductorUseCase,
   ConsultarSesionUseCase,
   CrearCuentaProductorUseCase,
   IniciarSesionUseCase,
@@ -23,7 +24,6 @@ import {
   ListarLotesUseCase,
   ListarParcelasUseCase,
   ListarProductoresUseCase,
-  ConsultarDniProductorUseCase,
   OtorgarAdministradorUseCase,
   QuitarAdministradorUseCase,
   RegistrarLoteUseCase,
@@ -52,6 +52,7 @@ export class AuthController {
     private readonly iniciar: IniciarSesionUseCase,
     private readonly consultar: ConsultarSesionUseCase,
     private readonly cambiar: CambiarContrasenaUseCase,
+    private readonly consultaDni: ConsultarDniProductorUseCase,
   ) {}
 
   registrarUsuario = async (req: Request, res: Response): Promise<void> => {
@@ -71,6 +72,10 @@ export class AuthController {
   cambiarContrasena = async (req: Request, res: Response): Promise<void> => {
     const cuerpo = validarCuerpo(z.object({ password: z.string(), confirmacion: z.string() }), req);
     res.status(200).json(await this.cambiar.ejecutar({ actor: actorDe(res), ...cuerpo }));
+  };
+
+  consultarDocumento = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.consultaDni.consultarPublico(String(req.params.documento)));
   };
 }
 

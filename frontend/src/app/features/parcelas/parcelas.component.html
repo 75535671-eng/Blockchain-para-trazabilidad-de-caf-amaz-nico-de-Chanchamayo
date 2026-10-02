@@ -59,7 +59,7 @@
 
 @if (modal) {
   <div class="modal-fondo">
-    <form class="modal" [formGroup]="form" (ngSubmit)="registrar()">
+    <form class="modal combo-modal" [formGroup]="form" (ngSubmit)="registrar()">
       <h2>{{ editandoId ? 'Editar parcela' : 'Registrar parcela' }}</h2>
       <div class="form-grid" style="margin-top: 1rem">
         @if (auth.sesion()?.rol === 'ADMINISTRADOR') {

@@ -65,6 +65,11 @@ function appDePrueba() {
       rol: 'ADMINISTRADOR',
     }),
   );
+  const consultaDni = new ConsultarDniProductor({
+    async consultar() {
+      return { nombre: 'Ana Quispe', estado: 'encontrado' };
+    },
+  });
   return createApp({
     corsOrigin: 'http://localhost:4200',
     tokens,
@@ -74,17 +79,14 @@ function appDePrueba() {
       new IniciarSesion(usuarios, productores, solicitudes, hasher, tokens),
       new ConsultarSesion(usuarios),
       new CambiarContrasena(usuarios, hasher),
+      consultaDni,
     ),
     productores: new ProductorController(
       new RegistrarProductor(productores),
       new ListarProductores(productores, usuarios),
       new ActualizarProductor(productores),
       new EliminarProductor(productores),
-      new ConsultarDniProductor({
-        async consultar() {
-          return { nombre: 'Ana Quispe', estado: 'encontrado' };
-        },
-      }),
+      consultaDni,
       new OtorgarAdministrador(usuarios, productores, hasher),
       new QuitarAdministrador(usuarios, productores),
       new CrearCuentaProductor(usuarios, productores, new MemoriaRegistro(memoria), hasher),
@@ -260,6 +262,11 @@ describe('API REST', () => {
     const consulta = await request(app).get('/api/productores/dni/44556677').set(auth);
     expect(consulta.status).toBe(200);
     expect(consulta.body).toEqual({ nombre: 'Ana Quispe', estado: 'encontrado' });
+    const consultaPublica = await request(app).get('/api/auth/documento/12345678');
+    expect(consultaPublica.status).toBe(200);
+    expect(consultaPublica.body).toEqual({ nombre: 'Ana Quispe', estado: 'encontrado' });
+    const documentoCorto = await request(app).get('/api/auth/documento/1234');
+    expect(documentoCorto.status).toBe(400);
     const distrito = await request(app).post('/api/parcelas').set(auth).send({
       productorId: creado.body.id,
       nombre: 'Fundo Alto',
