@@ -13,7 +13,7 @@ import { EstrategiaConAltitud, EstrategiaSinAltitud, SelectorEstrategiaAnalisis 
 import { Parcela } from '../../src/domain/entities/Parcela';
 
 const dominio = join(__dirname, '../../src/domain');
-const prohibido = ['express', 'mysql2', 'axios', 'jsonwebtoken', 'bcrypt', 'openai', '@angular'];
+const prohibido = ['express', 'mysql2', 'pg', '@supabase/supabase-js', 'axios', 'jsonwebtoken', 'bcrypt', 'openai', '@angular'];
 
 describe('dominio independiente', () => {
   it('no importa frameworks ni infraestructura', () => {

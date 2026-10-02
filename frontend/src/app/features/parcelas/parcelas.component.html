@@ -63,16 +63,35 @@
       <h2>{{ editandoId ? 'Editar parcela' : 'Registrar parcela' }}</h2>
       <div class="form-grid" style="margin-top: 1rem">
         @if (auth.sesion()?.rol === 'ADMINISTRADOR') {
-          <label class="campo">Productor
-            <select formControlName="productorId">
-              @for (productor of productores; track productor.id) {
-                <option [value]="productor.id">{{ productor.nombre }}</option>
-              }
-            </select>
-          </label>
+          <div class="campo combo">Productor
+            <input
+              type="text"
+              [value]="busquedaProductor"
+              (input)="buscarProductor($event)"
+              (focus)="listaProductoresAbierta = true"
+              (blur)="cerrarListaProductores()"
+              placeholder="Buscar productor"
+              autocomplete="off"
+            />
+            @if (listaProductoresAbierta) {
+              <ul class="combo-lista">
+                @for (productor of productoresFiltrados; track productor.id) {
+                  <li><button type="button" (mousedown)="elegirProductor(productor)">{{ productor.nombre }}</button></li>
+                }
+                @if (productoresFiltrados.length === 0) {
+                  <li class="combo-vacio">No hay productores registrados con ese nombre.</li>
+                }
+              </ul>
+            }
+          </div>
         }
-        <label class="campo">Nombre <input formControlName="nombre" /></label>
-        <label class="campo">Distrito <input formControlName="distrito" /></label>
+        <label class="campo">Nombre de parcela <input formControlName="nombre" /></label>
+        <label class="campo">Distrito
+          <select formControlName="distrito">
+            <option value="" disabled>Selecciona un distrito</option>
+            @for (item of distritosRegistro; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
         <label class="campo">Localidad <input formControlName="localidad" /></label>
         <label class="campo">Hectáreas <input formControlName="areaHectareas" type="number" step="0.01" /></label>
         <label class="campo">Altitud m s. n. m. <input formControlName="altitudMsnm" type="number" /></label>

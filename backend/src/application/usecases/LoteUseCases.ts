@@ -1,6 +1,7 @@
+import { esVariedadLote } from '../../domain/catalogos/registro';
 import { AnalisisLote } from '../../domain/entities/AnalisisLote';
 import { Lote } from '../../domain/entities/Lote';
-import { ForbiddenError, NotFoundError } from '../../domain/errors/DomainError';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../domain/errors/DomainError';
 import { LoteFactory } from '../../domain/services/LoteFactory';
 import { FechaCosecha } from '../../domain/valueobjects/FechaCosecha';
 import { Actor, AnalisisLoteDto, ConsultaLoteDto, LoteDto } from '../dto/dtos';
@@ -30,6 +31,7 @@ export class RegistrarLote implements RegistrarLoteUseCase {
     variedad: string;
     observaciones?: string | null;
   }): Promise<LoteDto> {
+    exigirVariedad(comando.variedad);
     const parcela = await this.parcelas.buscarPorId(comando.parcelaId);
     if (!parcela) {
       throw new NotFoundError('La parcela no existe.');
@@ -66,6 +68,7 @@ export class ActualizarLote implements ActualizarLoteUseCase {
     variedad: string;
     observaciones?: string | null;
   }): Promise<LoteDto> {
+    exigirVariedad(comando.variedad);
     const actual = await this.lotes.buscarPorId(comando.loteId);
     if (!actual) {
       throw new NotFoundError('El lote no existe.');
@@ -190,7 +193,13 @@ export async function consultarLote(
   };
 }
 
-export async function exigirAccesoAProductor(
+function exigirVariedad(variedad: string): void {
+  if (!esVariedadLote(variedad)) {
+    throw new ValidationError('Selecciona una variedad de la lista.');
+  }
+}
+
+async function exigirAccesoAProductor(
   productores: ProductorRepositoryPort,
   actor: Actor,
   productorId: string,

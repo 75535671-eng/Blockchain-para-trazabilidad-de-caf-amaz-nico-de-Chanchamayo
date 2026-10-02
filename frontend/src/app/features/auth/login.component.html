@@ -1,14 +1,45 @@
 <div class="auth-pagina">
-  <section class="card auth-card">
-    <a class="marca" routerLink="/login"><img class="logo-mark" src="/logo.jpg" alt="Café Chanchamayo" /></a>
-    <h1 style="margin-top: 1rem">Ingresar</h1>
-    <p class="muted">Accede al registro de productores, parcelas y lotes.</p>
-    <form [formGroup]="form" (ngSubmit)="enviar()" style="margin-top: 1rem">
-      <label class="campo">Correo <input formControlName="email" type="email" /></label>
-      <label class="campo">Contraseña <input formControlName="password" type="password" /></label>
-      @if (error) { <p class="alerta error">{{ error }}</p> }
-      <button class="btn" type="submit">Entrar</button>
-    </form>
-    <p><a routerLink="/registro">Crear una cuenta de productor</a></p>
+  <section class="auth-shell login-shell">
+    <svg class="curva" viewBox="0 0 1120 680" preserveAspectRatio="none" aria-hidden="true">
+      <path class="relleno" d="M0,0 L500,0 C680,30 720,120 660,240 C400,430 340,500 480,680 L0,680 Z" />
+      <path class="borde" d="M500,0 C680,30 720,120 660,240 C400,430 340,500 480,680" />
+    </svg>
+    <svg class="curva-movil" viewBox="0 0 1000 72" preserveAspectRatio="none" aria-hidden="true">
+      <path class="relleno" d="M0,36 C180,0 320,72 500,36 C680,0 820,72 1000,36 L1000,72 L0,72 Z" />
+      <path class="borde" d="M0,36 C180,0 320,72 500,36 C680,0 820,72 1000,36" />
+    </svg>
+    <div class="auth-form">
+      <img class="logo-auth" src="/logo.png" alt="Chanchamayo, café peruano" />
+      <h1>Iniciar sesión</h1>
+      <p class="muted">Ingresa a tu cuenta para continuar</p>
+      <form [formGroup]="form" (ngSubmit)="enviar()">
+        <label class="campo-linea">
+          <span class="ico" aria-hidden="true">✉</span>
+          <input formControlName="email" type="email" autocomplete="username" placeholder="Correo electrónico" />
+        </label>
+        <label class="campo-linea">
+          <span class="ico" aria-hidden="true">🔒</span>
+          <input
+            formControlName="password"
+            [type]="verClave ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="Contraseña"
+          />
+          <button type="button" class="ojo" (click)="verClave = !verClave">
+            {{ verClave ? 'Ocultar' : 'Ver' }}
+          </button>
+        </label>
+        @if (error) { <p class="alerta error">{{ error }}</p> }
+        <button class="btn bloque" type="submit">Iniciar sesión →</button>
+        <a class="btn secundario bloque" routerLink="/registro">Registrarse</a>
+      </form>
+    </div>
+    <aside class="auth-hero">
+      <div>
+        <h2>¡Bienvenido!</h2>
+        <p>Tu café tiene una historia.<br />Hagamos visible su origen.</p>
+      </div>
+      <p class="auth-nota">Registra tu producción y conserva la historia de cada lote.</p>
+    </aside>
   </section>
 </div>

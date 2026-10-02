@@ -43,6 +43,10 @@ export class Productor {
       this.createdAt,
     );
   }
+
+  conUsuario(usuarioId: string): Productor {
+    return new Productor(this.id, usuarioId, this.nombre, this.documento, this.telefono, this.organizacion, this.createdAt);
+  }
 }
 
 function nombreObligatorio(valor: string, sujeto: string): string {

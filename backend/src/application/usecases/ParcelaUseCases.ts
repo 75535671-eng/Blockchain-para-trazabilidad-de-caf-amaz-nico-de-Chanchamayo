@@ -1,5 +1,6 @@
+import { esDistritoParcela } from '../../domain/catalogos/registro';
 import { Parcela } from '../../domain/entities/Parcela';
-import { ConflictError, ForbiddenError, NotFoundError } from '../../domain/errors/DomainError';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../domain/errors/DomainError';
 import { Actor, ParcelaDto } from '../dto/dtos';
 import {
   ActualizarParcelaUseCase,
@@ -27,6 +28,7 @@ export class RegistrarParcela implements RegistrarParcelaUseCase {
     latitud?: number | null;
     longitud?: number | null;
   }): Promise<ParcelaDto> {
+    exigirDistrito(comando.distrito);
     const productorId = await productorAutorizado(this.productores, comando.actor, comando.productorId);
     const parcela = Parcela.crear({ ...comando, id: nuevoId(), productorId });
     await rechazarNombreDuplicado(this.parcelas, parcela.productorId, parcela.nombre);
@@ -53,6 +55,7 @@ export class ActualizarParcela implements ActualizarParcelaUseCase {
     latitud?: number | null;
     longitud?: number | null;
   }): Promise<ParcelaDto> {
+    exigirDistrito(comando.distrito);
     const actual = await this.parcelas.buscarPorId(comando.parcelaId);
     if (!actual) {
       throw new NotFoundError('La parcela no existe.');
@@ -97,6 +100,12 @@ export class ListarParcelas implements ListarParcelasUseCase {
       return [];
     }
     return (await this.parcelas.listarPorProductor(productor.id)).map(aParcelaDto);
+  }
+}
+
+function exigirDistrito(distrito: string): void {
+  if (!esDistritoParcela(distrito)) {
+    throw new ValidationError('Selecciona un distrito de la lista.');
   }
 }
 

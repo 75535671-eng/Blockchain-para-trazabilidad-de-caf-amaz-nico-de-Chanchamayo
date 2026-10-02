@@ -1,6 +1,15 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { IniciarSesionUseCase, RegistrarUsuarioUseCase } from '../../../application/ports/input/UseCases';
+import {
+  AprobarSolicitudUseCase,
+  CambiarContrasenaUseCase,
+  ConsultarSesionUseCase,
+  CrearCuentaProductorUseCase,
+  IniciarSesionUseCase,
+  ListarSolicitudesUseCase,
+  RechazarSolicitudUseCase,
+  SolicitarRegistroUseCase,
+} from '../../../application/ports/input/UseCases';
 import { actorDe, validarCuerpo } from '../http/http';
 import {
   ActualizarLoteUseCase,
@@ -14,6 +23,9 @@ import {
   ListarLotesUseCase,
   ListarParcelasUseCase,
   ListarProductoresUseCase,
+  ConsultarDniProductorUseCase,
+  OtorgarAdministradorUseCase,
+  QuitarAdministradorUseCase,
   RegistrarLoteUseCase,
   RegistrarParcelaUseCase,
   RegistrarProductorUseCase,
@@ -23,8 +35,9 @@ const registroSchema = z.object({
   nombre: z.string(),
   email: z.string(),
   password: z.string(),
+  confirmacion: z.string(),
   documento: z.string(),
-  telefono: z.string().nullable().optional(),
+  telefono: z.string(),
   organizacion: z.string().nullable().optional(),
 });
 
@@ -35,8 +48,10 @@ const loginSchema = z.object({
 
 export class AuthController {
   constructor(
-    private readonly registrar: RegistrarUsuarioUseCase,
+    private readonly registrar: SolicitarRegistroUseCase,
     private readonly iniciar: IniciarSesionUseCase,
+    private readonly consultar: ConsultarSesionUseCase,
+    private readonly cambiar: CambiarContrasenaUseCase,
   ) {}
 
   registrarUsuario = async (req: Request, res: Response): Promise<void> => {
@@ -47,6 +62,15 @@ export class AuthController {
   login = async (req: Request, res: Response): Promise<void> => {
     const cuerpo = validarCuerpo(loginSchema, req);
     res.status(200).json(await this.iniciar.ejecutar(cuerpo));
+  };
+
+  sesion = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.consultar.ejecutar(actorDe(res)));
+  };
+
+  cambiarContrasena = async (req: Request, res: Response): Promise<void> => {
+    const cuerpo = validarCuerpo(z.object({ password: z.string(), confirmacion: z.string() }), req);
+    res.status(200).json(await this.cambiar.ejecutar({ actor: actorDe(res), ...cuerpo }));
   };
 }
 
@@ -69,11 +93,23 @@ export class ProductorController {
     private readonly listar: ListarProductoresUseCase,
     private readonly actualizar: ActualizarProductorUseCase,
     private readonly eliminar: EliminarProductorUseCase,
+    private readonly consultarDni: ConsultarDniProductorUseCase,
+    private readonly otorgarAdministrador: OtorgarAdministradorUseCase,
+    private readonly quitarAdministrador: QuitarAdministradorUseCase,
+    private readonly crearCuenta: CrearCuentaProductorUseCase,
   ) {}
 
   crear = async (req: Request, res: Response): Promise<void> => {
     const cuerpo = validarCuerpo(productorSchema, req);
     res.status(201).json(await this.registrar.ejecutar({ actor: actorDe(res), ...cuerpo }));
+  };
+
+  crearConCuenta = async (req: Request, res: Response): Promise<void> => {
+    const cuerpo = validarCuerpo(
+      productorSchema.extend({ email: z.string(), password: z.string(), telefono: z.string() }),
+      req,
+    );
+    res.status(201).json(await this.crearCuenta.ejecutar({ actor: actorDe(res), ...cuerpo }));
   };
 
   listarTodos = async (_req: Request, res: Response): Promise<void> => {
@@ -90,6 +126,25 @@ export class ProductorController {
   eliminarUno = async (req: Request, res: Response): Promise<void> => {
     await this.eliminar.ejecutar({ actor: actorDe(res), productorId: String(req.params.id) });
     res.status(204).send();
+  };
+
+  otorgarRolAdministrador = async (req: Request, res: Response): Promise<void> => {
+    const cuerpo = z.object({ email: z.string().optional(), password: z.string().optional() }).parse(req.body ?? {});
+    res.status(200).json(
+      await this.otorgarAdministrador.ejecutar({ actor: actorDe(res), productorId: String(req.params.id), ...cuerpo }),
+    );
+  };
+
+  quitarRolAdministrador = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(
+      await this.quitarAdministrador.ejecutar({ actor: actorDe(res), productorId: String(req.params.id) }),
+    );
+  };
+
+  consultarDocumento = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(
+      await this.consultarDni.ejecutar({ actor: actorDe(res), documento: String(req.params.documento) }),
+    );
   };
 }
 
@@ -179,5 +234,28 @@ export class LoteController {
   eliminarUno = async (req: Request, res: Response): Promise<void> => {
     await this.eliminar.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) });
     res.status(204).send();
+  };
+}
+
+export class SolicitudController {
+  constructor(
+    private readonly listar: ListarSolicitudesUseCase,
+    private readonly aprobar: AprobarSolicitudUseCase,
+    private readonly rechazar: RechazarSolicitudUseCase,
+  ) {}
+
+  listarTodas = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.listar.ejecutar(actorDe(res)));
+  };
+
+  aprobarUna = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.aprobar.ejecutar({ actor: actorDe(res), solicitudId: String(req.params.id) }));
+  };
+
+  rechazarUna = async (req: Request, res: Response): Promise<void> => {
+    const cuerpo = validarCuerpo(z.object({ motivo: z.string() }), req);
+    res.status(200).json(
+      await this.rechazar.ejecutar({ actor: actorDe(res), solicitudId: String(req.params.id), motivo: cuerpo.motivo }),
+    );
   };
 }

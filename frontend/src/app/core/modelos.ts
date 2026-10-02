@@ -3,6 +3,20 @@ export interface UsuarioSesion {
   nombre: string;
   email: string;
   rol: 'ADMINISTRADOR' | 'PRODUCTOR';
+  debeCambiarPassword?: boolean;
+}
+
+export interface SolicitudRegistro {
+  id: string;
+  nombre: string;
+  documento: string;
+  telefono: string;
+  organizacion: string | null;
+  email: string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  motivoRechazo: string | null;
+  fechaSolicitud: string;
+  fechaResolucion: string | null;
 }
 
 export interface Productor {
@@ -12,6 +26,7 @@ export interface Productor {
   documento: string;
   telefono: string | null;
   organizacion: string | null;
+  rolCuenta?: 'ADMINISTRADOR' | 'PRODUCTOR' | null;
 }
 
 export interface Parcela {

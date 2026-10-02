@@ -11,7 +11,8 @@ Este incremento cubre usuarios, autenticación, productores, parcelas, lotes, re
 Como usuario autorizado necesito registrarme e iniciar sesión para acceder de forma segura a las funcionalidades del sistema.
 
 - Given un correo que no existe, when la persona se registra con datos válidos, then el sistema crea un usuario productor y su ficha.
-- Given credenciales válidas, when inicia sesión, then recibe un token.
+- Given credenciales válidas de una cuenta activa, when inicia sesión, then recibe un token. Si la cuenta fue creada por el administrador, debe cambiar la contraseña temporal antes de usar el panel.
+- Given una solicitud pública, when se envía, then queda `pendiente` y no permite entrar hasta que un administrador la apruebe.
 - Given credenciales inválidas, when inicia sesión, then el acceso se rechaza.
 
 ### HU-002
@@ -46,7 +47,7 @@ Indicador: clasificación de coherencia del registro (`COHERENTE`, `REVISAR` o `
 
 Validación: si la respuesta no trae una clasificación o un resumen válido, no se guarda.
 
-Valor: antes de ampliar la cadena, el usuario puede ver si el origen registrado merece revisión.
+Valor: antes de ampliar la cadena, el usuario puede ver si el origen registrado merece revisión. No es una estimación de calidad, una predicción de cosecha ni una clasificación agronómica.
 
 `analisis_lotes` existe para conservar ese resultado y mostrarlo en la consulta del lote.
 

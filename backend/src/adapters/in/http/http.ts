@@ -2,10 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import { ZodError, ZodSchema } from 'zod';
 import { DomainError } from '../../../domain/errors/DomainError';
 import { Actor } from '../../../application/dto/dtos';
-import { TokenProviderPort } from '../../../application/ports/output/OutputPorts';
+import { TokenProviderPort, UsuarioRepositoryPort } from '../../../application/ports/output/OutputPorts';
 import { AIConfigurationError } from '../../out/ai/ExternalAIAdapter';
 
-export function autenticar(tokens: TokenProviderPort) {
+export function autenticar(tokens: TokenProviderPort, usuarios: UsuarioRepositoryPort) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const header = req.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
@@ -13,12 +13,36 @@ export function autenticar(tokens: TokenProviderPort) {
       res.status(401).json({ error: 'Se requiere autenticación.' });
       return;
     }
+    let payload: { usuarioId: string; rol: Actor['rol'] };
     try {
-      res.locals.actor = tokens.verificar(token);
-      next();
+      payload = tokens.verificar(token);
     } catch {
       res.status(401).json({ error: 'La sesión no es válida.' });
+      return;
     }
+    usuarios
+      .buscarPorId(payload.usuarioId)
+      .then((usuario) => {
+        if (!usuario) {
+          res.status(401).json({ error: 'La sesión no es válida.' });
+          return;
+        }
+        if (usuario.estado === 'bloqueada') {
+          res.status(403).json({ error: 'Tu cuenta no está habilitada.' });
+          return;
+        }
+        const rutaLibre = req.path === '/api/auth/cambiar-contrasena' || req.path === '/api/auth/sesion';
+        if (usuario.debeCambiarPassword && !rutaLibre) {
+          res.status(403).json({ error: 'Debes cambiar tu contraseña temporal antes de continuar.' });
+          return;
+        }
+        res.locals.actor = {
+          usuarioId: payload.usuarioId,
+          rol: usuario.rol === 'PRODUCTOR' ? 'PRODUCTOR' : payload.rol,
+        };
+        next();
+      })
+      .catch(next);
   };
 }
 
