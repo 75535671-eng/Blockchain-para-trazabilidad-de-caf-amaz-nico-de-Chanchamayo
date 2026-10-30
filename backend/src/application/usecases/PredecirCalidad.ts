@@ -25,7 +25,11 @@ export class PredecirCalidad implements PredecirCalidadUseCase {
   ) {}
 
   async ejecutar(comando: { actor: Actor; loteId: string }): Promise<IntentoPrediccionDto> {
-    const contexto = await cargarContexto(this, comando.actor, comando.loteId);
+    const contexto = await cargarContexto(
+      { lotes: this.lotes, parcelas: this.parcelas, productores: this.productores, eventos: this.eventos },
+      comando.actor,
+      comando.loteId,
+    );
     const ausentes = ausenciasParaPrediccion(contexto.variables);
     if (ausentes.length > 0) {
       return {

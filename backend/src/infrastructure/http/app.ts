@@ -24,6 +24,14 @@ export function createApp(container: AppContainer): Express {
   app.use(express.json());
   const requiereAuth = autenticar(container.tokens, container.usuarios);
 
+  app.get(['/api', '/api/'], (_req, res) => {
+    res.status(200).json({
+      servicio: 'Chanchamayo Coffee Trace',
+      estado: 'ok',
+      salud: '/api/health',
+    });
+  });
+
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ estado: 'ok' });
   });
