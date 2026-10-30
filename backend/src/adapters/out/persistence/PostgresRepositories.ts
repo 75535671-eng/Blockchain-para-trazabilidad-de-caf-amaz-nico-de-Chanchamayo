@@ -20,6 +20,7 @@ import {
   UsuarioRepositoryPort,
 } from '../../../application/ports/output/OutputPorts';
 import { Pool } from 'pg';
+import { borrarTrazabilidadDeLote, borrarTrazabilidadDeProductor } from './PostgresEventoRepository';
 
 type Fila = Record<string, unknown>;
 
@@ -282,6 +283,7 @@ export class PostgresProductorRepository implements ProductorRepositoryPort {
             OR documento_identidad = $3`,
         [id, usuarioId, String(fila.documento_identidad)],
       );
+      await borrarTrazabilidadDeProductor(client, id);
       await client.query(
         `DELETE FROM analisis_lotes
          WHERE lote_id IN (
@@ -499,7 +501,19 @@ export class PostgresLoteRepository implements LoteRepositoryPort {
   }
 
   async eliminar(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM lotes WHERE id = $1', [id]);
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await borrarTrazabilidadDeLote(client, id);
+      await client.query('DELETE FROM analisis_lotes WHERE lote_id = $1', [id]);
+      await client.query('DELETE FROM lotes WHERE id = $1', [id]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async buscarPorId(id: string): Promise<Lote | null> {

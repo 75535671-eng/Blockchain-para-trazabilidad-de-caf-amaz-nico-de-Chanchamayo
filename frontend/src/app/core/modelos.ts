@@ -69,3 +69,83 @@ export interface ConsultaLote {
   productor: Productor;
   ultimoAnalisis: AnalisisLote | null;
 }
+
+export interface VariableBeneficio {
+  id: string;
+  metodoBeneficio: 'Lavado' | 'Honey' | 'Natural';
+  humedadPorcentaje: number;
+}
+
+export interface EventoTrazabilidad {
+  id: string;
+  loteId: string;
+  etapa: 'BENEFICIO' | 'TRILLA' | 'ALMACENAMIENTO' | 'TRASLADO' | 'EXPORTACION';
+  fecha: string;
+  descripcion: string;
+  variables: VariableBeneficio | null;
+  createdAt: string;
+}
+
+export interface PrediccionCalidad {
+  id: string;
+  loteId: string;
+  calidad: string;
+  modelo: string;
+  referencia: string;
+  createdAt: string;
+}
+
+export interface IntentoPrediccion {
+  estado: 'datos_insuficientes' | 'no_disponible' | 'disponible';
+  mensaje: string | null;
+  variables: {
+    variedad: string | null;
+    altitudMsnm: number | null;
+    metodoBeneficio: string | null;
+    humedadPorcentaje: number | null;
+  };
+  prediccion: PrediccionCalidad | null;
+}
+
+export interface MetricaHistorica {
+  nombre: string;
+  resultado: number;
+  meta: number;
+}
+
+export interface EvaluacionModelo {
+  estado: 'NO_CONCLUYENTE';
+  algoritmo: string;
+  identificador: string;
+  dataset: string;
+  datasetDisponible: boolean;
+  modeloExportado: boolean;
+  registrosEntrenamiento: number;
+  registrosPrueba: number;
+  randomState: number;
+  metricasHistoricas: MetricaHistorica[];
+  decisionHistorica: string;
+  limitaciones: string[];
+}
+
+export interface ReporteLote {
+  loteId: string;
+  codigo: string;
+  estado: string;
+  variedad: string;
+  fechaCosecha: string;
+  cantidadKg: number;
+  productor: string;
+  organizacion: string | null;
+  parcela: string;
+  distrito: string;
+  localidad: string | null;
+  altitudMsnm: number | null;
+  eventos: EventoTrazabilidad[];
+}
+
+export interface ReporteTrazabilidad {
+  disponible: boolean;
+  mensaje: string | null;
+  lotes: ReporteLote[];
+}

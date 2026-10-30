@@ -1,7 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { ConsultaLote, Lote, Parcela, Productor, SolicitudRegistro } from './modelos';
+import {
+  ConsultaLote,
+  EvaluacionModelo,
+  EventoTrazabilidad,
+  IntentoPrediccion,
+  Lote,
+  Parcela,
+  PrediccionCalidad,
+  Productor,
+  ReporteTrazabilidad,
+  SolicitudRegistro,
+} from './modelos';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -150,5 +161,46 @@ export class ApiService {
 
   analizarLote(id: string) {
     return this.http.post<ConsultaLote>(`${environment.apiUrl}/lotes/${id}/analisis`, {});
+  }
+
+  listarEventos(loteId: string) {
+    return this.http.get<EventoTrazabilidad[]>(`${environment.apiUrl}/lotes/${loteId}/eventos`);
+  }
+
+  listarEventosVisibles() {
+    return this.http.get<EventoTrazabilidad[]>(`${environment.apiUrl}/eventos`);
+  }
+
+  predecirCalidad(loteId: string) {
+    return this.http.post<IntentoPrediccion>(`${environment.apiUrl}/lotes/${loteId}/prediccion`, {});
+  }
+
+  listarPredicciones(loteId: string) {
+    return this.http.get<PrediccionCalidad[]>(`${environment.apiUrl}/lotes/${loteId}/predicciones`);
+  }
+
+  listarPrediccionesVisibles() {
+    return this.http.get<PrediccionCalidad[]>(`${environment.apiUrl}/predicciones`);
+  }
+
+  consultarEvaluacion() {
+    return this.http.get<EvaluacionModelo>(`${environment.apiUrl}/modelo/evaluacion`);
+  }
+
+  consultarReporte(filtros: Record<string, string>) {
+    return this.http.get<ReporteTrazabilidad>(`${environment.apiUrl}/reportes/trazabilidad`, { params: filtros });
+  }
+
+  registrarEvento(
+    loteId: string,
+    datos: {
+      etapa: string;
+      fecha: string;
+      descripcion: string;
+      metodoBeneficio?: string;
+      humedadPorcentaje?: number | null;
+    },
+  ) {
+    return this.http.post<EventoTrazabilidad>(`${environment.apiUrl}/lotes/${loteId}/eventos`, datos);
   }
 }

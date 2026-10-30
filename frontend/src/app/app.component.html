@@ -19,7 +19,7 @@
         <span></span>
         <span></span>
       </button>
-      <span class="topbar-marca">Café Chanchamayo</span>
+      <span class="topbar-marca">Coffee Trace</span>
     </header>
     @if (menuAbierto) {
       <button type="button" class="menu-fondo" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
@@ -27,7 +27,7 @@
     <aside id="menu-app" class="sidebar" [class.abierto]="menuAbierto">
       <button type="button" class="btn secundario cerrar-menu" (click)="cerrarMenu()">Cerrar</button>
       <a routerLink="/inicio" class="marca" (click)="cerrarMenu()">
-        <img class="logo-mark" src="/logo.png" alt="Chanchamayo, café peruano" />
+        <img class="logo-mark" src="/logo.png" alt="Café Chanchamayo" />
       </a>
       <nav class="nav-links">
         @for (enlace of enlacesVisibles; track enlace.ruta) {

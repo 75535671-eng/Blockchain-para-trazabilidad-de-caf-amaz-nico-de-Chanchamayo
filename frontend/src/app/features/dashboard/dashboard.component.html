@@ -1,18 +1,21 @@
-<header class="page-head">
+<header class="hero">
+  <img src="/login-cafe.jpg" alt="Cerezas de café de Chanchamayo" />
   <div>
+    <p class="marca">Chanchamayo Coffee Trace</p>
     <h1 class="saludo">Hola, {{ auth.sesion()?.nombre }}</h1>
-    <p>Monitoreo de la trazabilidad del café de Chanchamayo</p>
+    <p>Del origen a la calidad, cada lote cuenta una historia.</p>
   </div>
 </header>
 
 @if (cargando) { <p class="vacio">Cargando información registrada…</p> }
 @if (error) { <p class="alerta error">{{ error }}</p> }
+@if (avisoEventos) { <p class="alerta error">{{ avisoEventos }}</p> }
 
 <section class="stats">
-  <article class="card stat"><div><span class="muted">Productores</span><strong>{{ productores }}</strong><span class="muted">fichas registradas</span></div><span class="icono">☺</span></article>
-  <article class="card stat"><div><span class="muted">Parcelas</span><strong>{{ parcelas }}</strong><span class="muted">orígenes vinculados</span></div><span class="icono">▣</span></article>
-  <article class="card stat"><div><span class="muted">Lotes</span><strong>{{ lotes }}</strong><span class="muted">con estado registrado</span></div><span class="icono">▤</span></article>
-  <article class="card stat"><div><span class="muted">Producción</span><strong>{{ kilogramos }} kg</strong><span class="muted">suma de lotes consultados</span></div><span class="icono">⚖</span></article>
+  <article class="card stat"><div><span class="muted">Productores</span><strong>{{ productores }}</strong><span class="muted">fichas registradas</span></div></article>
+  <article class="card stat"><div><span class="muted">Parcelas</span><strong>{{ parcelas }}</strong><span class="muted">orígenes vinculados</span></div></article>
+  <article class="card stat"><div><span class="muted">Lotes</span><strong>{{ lotes }}</strong><span class="muted">{{ kilogramos }} kg registrados</span></div></article>
+  <article class="card stat"><div><span class="muted">Eventos</span><strong>{{ eventosTotal }}</strong><span class="muted">del proceso productivo</span></div></article>
 </section>
 
 <section class="layout-2">
@@ -33,9 +36,45 @@
     }
   </article>
   <article class="card">
+    <h2>Etapas registradas</h2>
+    <p class="muted">Cantidad de eventos reales por etapa.</p>
+    @if (etapas.length === 0) {
+      <p class="vacio">Todavía no hay eventos para agrupar por etapa.</p>
+    } @else {
+      <div class="barras">
+        @for (etapa of etapas; track etapa.etiqueta) {
+          <div class="barra">
+            <span [style.height.px]="etapa.altura" [title]="etapa.cantidad + ' eventos'"></span>
+            {{ etapa.etiqueta }}
+          </div>
+        }
+      </div>
+    }
+  </article>
+</section>
+
+<section class="layout-2" style="margin-top: 0.9rem">
+  <article class="card">
+    <h2>Resumen de trazabilidad</h2>
+    <div class="meta">
+      <span>Lotes con eventos: {{ lotesConRecorrido }}</span>
+      <span>Lotes sin eventos: {{ lotes - lotesConRecorrido }}</span>
+      <span>Predicciones registradas: {{ predicciones }}</span>
+      <span>Evaluación del modelo: {{ evaluacion ? 'no concluyente' : 'sin consulta' }}</span>
+    </div>
+    <a class="btn secundario" routerLink="/historial">Abrir historial</a>
+  </article>
+  <article class="card">
     <h2>Actividad reciente</h2>
-    <p class="muted">Esta sección está lista para eventos de registro. El PMV1 todavía no guarda un historial de actividad.</p>
-    <p class="vacio">No hay eventos de actividad para mostrar.</p>
+    @if (actividad.length === 0) {
+      <p class="vacio">No hay eventos de actividad para mostrar.</p>
+    } @else {
+      <ul class="actividad">
+        @for (evento of actividad; track evento.id) {
+          <li><strong>{{ evento.fecha }}</strong> {{ etiquetaEtapa(evento.etapa) }} · {{ evento.descripcion }}</li>
+        }
+      </ul>
+    }
   </article>
 </section>
 

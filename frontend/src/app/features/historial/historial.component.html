@@ -1,0 +1,47 @@
+<header class="page-head">
+  <div>
+    <p class="marca">Chanchamayo Coffee Trace</p>
+    <h1>Historial de trazabilidad</h1>
+    <p>Del origen a la calidad, cada lote cuenta una historia.</p>
+  </div>
+</header>
+
+@if (error) { <p class="alerta error">{{ error }}</p> }
+
+@if (lotes.length === 0 && !error) {
+  <p class="vacio">No hay lotes registrados para consultar un historial.</p>
+} @else if (lotes.length > 0) {
+  <label class="campo" style="max-width: 520px">Lote
+    <select [(ngModel)]="loteId" (ngModelChange)="consultar()">
+      @for (lote of lotes; track lote.id) {
+        <option [value]="lote.id">{{ lote.codigo }} · {{ lote.productor }} · {{ lote.parcela }}</option>
+      }
+    </select>
+  </label>
+  @if (lote) {
+    <article class="card origen">
+      <div class="lote-top">
+        <h2>{{ lote.codigo }}</h2>
+        <span class="badge">{{ lote.estado }}</span>
+      </div>
+      <div class="meta">
+        <span>{{ lote.productor }}</span>
+        <span>{{ lote.parcela }} · {{ lote.distrito }}</span>
+        <span>{{ lote.variedad }}</span>
+        <span>Cosecha {{ lote.fechaCosecha }}</span>
+      </div>
+      <div class="acciones">
+        <a class="btn secundario" [routerLink]="['/lotes', lote.id]">Ficha del lote</a>
+        <a class="btn secundario" [routerLink]="['/eventos']" [queryParams]="{ lote: lote.id }">Registrar evento</a>
+      </div>
+    </article>
+  }
+  <section class="card">
+    <h2>Recorrido</h2>
+    @if (cargando) {
+      <p class="vacio">Consultando el historial…</p>
+    } @else if (!error) {
+      <app-historial-lote [eventos]="eventos" />
+    }
+  </section>
+}

@@ -66,3 +66,35 @@ Requiere sesión. Reemplaza el hash y deja `debe_cambiar_password` en falso. Mie
 ```
 
 El análisis devuelve la consulta del lote con `ultimoAnalisis`: estrategia, clasificación de coherencia del registro (`COHERENTE`, `REVISAR` o `INSUFICIENTE`), resumen, observaciones, confianza y proveedor. No certifica calidad del café. Si el proveedor externo falla, la API responde con error y no guarda un análisis simulado.
+
+### Eventos de trazabilidad
+
+- `POST /api/lotes/:id/eventos` — registra el evento y, si la etapa es beneficio, sus variables en una sola transacción.
+- `GET /api/lotes/:id/eventos` — devuelve los eventos del lote por fecha. El productor solo consulta sus lotes.
+
+```json
+{
+  "etapa": "BENEFICIO",
+  "fecha": "2026-08-01",
+  "descripcion": "Beneficio lavado hasta pergamino.",
+  "metodoBeneficio": "Lavado",
+  "humedadPorcentaje": 11.5
+}
+```
+
+Las etapas son `BENEFICIO`, `TRILLA`, `ALMACENAMIENTO`, `TRASLADO` y `EXPORTACION`. El método es `Lavado`, `Honey` o `Natural`. La humedad va de 0 a 100, con hasta dos decimales. En las etapas distintas de beneficio no se envían variables. La fecha no puede ser anterior a la cosecha ni futura. Una puntuación de catación enviada en el cuerpo se ignora y no se guarda.
+
+- `GET /api/eventos` — eventos visibles para el usuario, ordenados por fecha. El productor solo ve los de sus lotes.
+
+### Predicción de calidad
+
+La predicción no reutiliza el análisis de coherencia. El adaptador de producción no tiene un modelo validado integrado, así que no inventa ni guarda resultados.
+
+- `POST /api/lotes/:id/prediccion` — revisa variedad, altitud, método y humedad del último beneficio. Responde `datos_insuficientes` o `no_disponible`, con `prediccion` en null. Solo persistiría una fila si un modelo real devolviera un resultado.
+- `GET /api/lotes/:id/predicciones` — predicciones realmente guardadas de ese lote.
+- `GET /api/predicciones` — predicciones visibles para el usuario.
+- `GET /api/modelo/evaluacion` — estado de la PoC RF-IA-01. El estado es `NO_CONCLUYENTE`. Las métricas históricas no miden calidad de los lotes del sistema y no incluyen `hash_blockchain_valid`.
+
+### Reportes
+
+- `GET /api/reportes/trazabilidad` — consulta real de lotes visibles. Filtros opcionales: `loteId`, `productorId`, `parcelaId`, `desde` y `hasta` (`YYYY-MM-DD`). Si no hay filas, `disponible` es false y el mensaje es `No hay información disponible para generar el reporte.` Un productor no puede filtrar por otro productor.

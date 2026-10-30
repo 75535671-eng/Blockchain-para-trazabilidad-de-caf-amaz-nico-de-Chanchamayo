@@ -29,6 +29,7 @@
             <button type="button" class="btn texto" (click)="editar(lote)">Editar</button>
             <button type="button" class="btn texto" (click)="eliminar(lote)">Eliminar</button>
             <a class="btn texto" [routerLink]="['/lotes', lote.id]">Consultar</a>
+            <a class="btn texto" [routerLink]="['/eventos']" [queryParams]="{ lote: lote.id }">Evento</a>
           </td>
         </tr>
       }
@@ -46,6 +47,7 @@
         <button type="button" class="btn texto" (click)="editar(lote)">Editar</button>
         <button type="button" class="btn texto" (click)="eliminar(lote)">Eliminar</button>
         <a class="btn secundario" [routerLink]="['/lotes', lote.id]">Consultar</a>
+        <a class="btn secundario" [routerLink]="['/eventos']" [queryParams]="{ lote: lote.id }">Evento</a>
       </div>
     </article>
   }

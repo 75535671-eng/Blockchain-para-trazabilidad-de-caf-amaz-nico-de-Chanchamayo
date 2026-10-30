@@ -1,10 +1,16 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { AuthController, LoteController, ParcelaController, ProductorController, SolicitudController } from '../../src/adapters/in/controllers/Controllers';
+import { AuthController, EventoController, InteligenciaController, LoteController, ParcelaController, ProductorController, ReporteController, SolicitudController } from '../../src/adapters/in/controllers/Controllers';
+import { PredictorCalidadNoIntegrado } from '../../src/adapters/out/prediccion/PredictorCalidadNoIntegrado';
 import { ExternalAIAdapter } from '../../src/adapters/out/ai/ExternalAIAdapter';
 import { createApp } from '../../src/infrastructure/http/app';
 import { AnalizarLote } from '../../src/application/usecases/AnalizarLote';
 import { CambiarContrasena, ConsultarSesion, IniciarSesion } from '../../src/application/usecases/IniciarSesion';
+import { ConsultarEvaluacionModelo } from '../../src/application/usecases/ConsultarEvaluacionModelo';
+import { ListarEventos, ListarEventosVisibles, RegistrarEvento } from '../../src/application/usecases/EventoUseCases';
+import { GenerarReporteTrazabilidad } from '../../src/application/usecases/GenerarReporteTrazabilidad';
+import { ListarPredicciones, ListarPrediccionesVisibles, PredecirCalidad } from '../../src/application/usecases/PredecirCalidad';
+import { hoyIso } from '../../src/application/support/apoyo';
 import { ActualizarLote, ConsultarLote, EliminarLote, ListarLotes, RegistrarLote } from '../../src/application/usecases/LoteUseCases';
 import { ActualizarParcela, EliminarParcela, ListarParcelas, RegistrarParcela } from '../../src/application/usecases/ParcelaUseCases';
 import { ActualizarProductor, ConsultarDniProductor, EliminarProductor, ListarProductores, OtorgarAdministrador, QuitarAdministrador, RegistrarProductor } from '../../src/application/usecases/ProductorUseCases';
@@ -16,7 +22,9 @@ import {
   HasherFijo,
   Memoria,
   MemoriaAnalisis,
+  MemoriaEventos,
   MemoriaLotes,
+  MemoriaPredicciones,
   MemoriaParcelas,
   MemoriaProductores,
   MemoriaRegistro,
@@ -32,6 +40,8 @@ function appDePrueba() {
   const parcelas = new MemoriaParcelas(memoria);
   const lotes = new MemoriaLotes(memoria);
   const analisis = new MemoriaAnalisis(memoria);
+  const eventos = new MemoriaEventos(memoria);
+  const predicciones = new MemoriaPredicciones(memoria);
   const tokens = new TokensFijos();
   const hasher = new HasherFijo();
   const solicitudes = new MemoriaSolicitudes(memoria);
@@ -108,8 +118,20 @@ function appDePrueba() {
       new ConsultarLote(lotes, parcelas, productores, analisis),
       new AnalizarLote(lotes, parcelas, productores, analisis, ia, selector),
       new ActualizarLote(lotes, parcelas, productores),
-      new EliminarLote(lotes, parcelas, productores, analisis),
+      new EliminarLote(lotes, parcelas, productores),
     ),
+    eventos: new EventoController(
+      new RegistrarEvento(eventos, lotes, parcelas, productores),
+      new ListarEventos(eventos, lotes, parcelas, productores),
+      new ListarEventosVisibles(eventos, lotes, parcelas, productores),
+    ),
+    inteligencia: new InteligenciaController(
+      new PredecirCalidad(lotes, parcelas, productores, eventos, predicciones, new PredictorCalidadNoIntegrado()),
+      new ListarPredicciones(lotes, parcelas, productores, predicciones),
+      new ListarPrediccionesVisibles(lotes, parcelas, productores, predicciones),
+      new ConsultarEvaluacionModelo(),
+    ),
+    reportes: new ReporteController(new GenerarReporteTrazabilidad(lotes, parcelas, productores, eventos)),
   });
 }
 
@@ -310,7 +332,6 @@ describe('API REST', () => {
       documento: '87654321',
       telefono: '999888777',
     });
-    const login = { body: { token: rosa.token } };
     const authProductor = { Authorization: `Bearer ${rosa.token}` };
     const listaPropia = await request(app).get('/api/productores').set(authProductor);
     expect(listaPropia.body).toHaveLength(1);
@@ -569,5 +590,137 @@ describe('API REST', () => {
     expect(loteBorrado.status).toBe(404);
     const ajenoSigue = await request(app).post('/api/auth/login').send({ email: 'conservar@example.com', password: 'Cafe1234' });
     expect(ajenoSigue.status).toBe(200);
+  });
+
+  it('registra un evento válido, rechaza uno inválido y conserva el acceso del PMV1', async () => {
+    const app = appDePrueba();
+    const sesion = await entrarComoProductor(app, {
+      nombre: 'Luis Pérez',
+      email: 'eventos@example.com',
+      password: 'Cafe1234',
+      documento: '22334455',
+      telefono: '900111333',
+    });
+    const auth = { Authorization: `Bearer ${sesion.token}` };
+    const parcela = await request(app).post('/api/parcelas').set(auth).send({
+      productorId: sesion.productorId,
+      nombre: 'Parcela Eventos',
+      distrito: 'La Merced',
+      areaHectareas: 1.4,
+    });
+    expect(parcela.status).toBe(201);
+    const lote = await request(app).post('/api/lotes').set(auth).send({
+      parcelaId: parcela.body.id,
+      fechaCosecha: '2026-06-10',
+      cantidadKg: 180,
+      variedad: 'Typica',
+    });
+    expect(lote.status).toBe(201);
+    const sinSesion = await request(app).post(`/api/lotes/${lote.body.id}/eventos`).send({
+      etapa: 'TRASLADO',
+      fecha: hoyIso(),
+      descripcion: 'Sin sesión.',
+    });
+    expect(sinSesion.status).toBe(401);
+    const invalido = await request(app).post(`/api/lotes/${lote.body.id}/eventos`).set(auth).send({
+      etapa: 'BENEFICIO',
+      fecha: hoyIso(),
+      descripcion: 'Beneficio incompleto.',
+      metodoBeneficio: 'Lavado',
+      humedadPorcentaje: 140,
+      puntuacionCatacion: 90,
+    });
+    expect(invalido.status).toBe(400);
+    expect(invalido.body.error).toMatch(/humedad/);
+    const vacio = await request(app).get(`/api/lotes/${lote.body.id}/eventos`).set(auth);
+    expect(vacio.status).toBe(200);
+    expect(vacio.body).toEqual([]);
+    const creado = await request(app).post(`/api/lotes/${lote.body.id}/eventos`).set(auth).send({
+      etapa: 'BENEFICIO',
+      fecha: hoyIso(),
+      descripcion: 'Beneficio lavado hasta pergamino.',
+      metodoBeneficio: 'Lavado',
+      humedadPorcentaje: 11.5,
+      puntuacionCatacion: 90,
+    });
+    expect(creado.status).toBe(201);
+    expect(creado.body.variables).toMatchObject({ metodoBeneficio: 'Lavado', humedadPorcentaje: 11.5 });
+    expect(creado.body.variables.puntuacionCatacion).toBeUndefined();
+    expect(JSON.stringify(creado.body)).not.toMatch(/puntuacion|catacion/i);
+    const ajeno = await entrarComoProductor(app, {
+      nombre: 'Rosa Quispe',
+      email: 'ajena-eventos@example.com',
+      password: 'Cafe1234',
+      documento: '33445566',
+      telefono: '900111444',
+    });
+    const prohibido = await request(app)
+      .post(`/api/lotes/${lote.body.id}/eventos`)
+      .set({ Authorization: `Bearer ${ajeno.token}` })
+      .send({ etapa: 'TRASLADO', fecha: hoyIso(), descripcion: 'No corresponde a este productor.' });
+    expect(prohibido.status).toBe(403);
+    const lista = await request(app).get(`/api/lotes/${lote.body.id}/eventos`).set(auth);
+    expect(lista.status).toBe(200);
+    expect(lista.body).toHaveLength(1);
+    const borrado = await request(app).delete(`/api/lotes/${lote.body.id}`).set(auth);
+    expect(borrado.status).toBe(204);
+    const trasBorrar = await request(app).get(`/api/lotes/${lote.body.id}/eventos`).set(auth);
+    expect(trasBorrar.status).toBe(404);
+    const consulta = await request(app).get(`/api/lotes/${lote.body.id}`).set(auth);
+    expect(consulta.status).toBe(404);
+  });
+
+  it('informa predicción no disponible, evaluación no concluyente y reporte con datos reales', async () => {
+    const app = appDePrueba();
+    const sesion = await entrarComoProductor(app, {
+      nombre: 'Elena Vargas',
+      email: 'reporte@example.com',
+      password: 'Cafe1234',
+      documento: '55667788',
+      telefono: '900222333',
+    });
+    const auth = { Authorization: `Bearer ${sesion.token}` };
+    const evaluacion = await request(app).get('/api/modelo/evaluacion').set(auth);
+    expect(evaluacion.status).toBe(200);
+    expect(evaluacion.body.estado).toBe('NO_CONCLUYENTE');
+    expect(JSON.stringify(evaluacion.body)).not.toMatch(/hash_blockchain/i);
+    expect(evaluacion.body.metricasHistoricas.map((item: { nombre: string }) => item.nombre)).toEqual([
+      'Accuracy calidad_tipo',
+      'F1 macro calidad_tipo',
+    ]);
+    const parcela = await request(app).post('/api/parcelas').set(auth).send({
+      productorId: sesion.productorId,
+      nombre: 'Parcela Reporte',
+      distrito: 'Perené',
+      areaHectareas: 1,
+    });
+    const lote = await request(app).post('/api/lotes').set(auth).send({
+      parcelaId: parcela.body.id,
+      fechaCosecha: '2026-06-10',
+      cantidadKg: 90,
+      variedad: 'Pache',
+    });
+    const sinDatos = await request(app).post(`/api/lotes/${lote.body.id}/prediccion`).set(auth).send({});
+    expect(sinDatos.status).toBe(200);
+    expect(sinDatos.body.estado).toBe('datos_insuficientes');
+    expect(sinDatos.body.prediccion).toBeNull();
+    await request(app).post(`/api/lotes/${lote.body.id}/eventos`).set(auth).send({
+      etapa: 'TRASLADO',
+      fecha: hoyIso(),
+      descripcion: 'Traslado al almacén de la cooperativa.',
+    });
+    const reporte = await request(app).get('/api/reportes/trazabilidad').set(auth);
+    expect(reporte.status).toBe(200);
+    expect(reporte.body.disponible).toBe(true);
+    expect(reporte.body.lotes[0].codigo).toMatch(/^CHNY-/);
+    expect(reporte.body.lotes[0].eventos).toHaveLength(1);
+    expect(reporte.body.lotes[0].productor).toBe('Elena Vargas');
+    const vacio = await request(app).get('/api/reportes/trazabilidad').query({ desde: '1999-01-01', hasta: '1999-01-02' }).set(auth);
+    expect(vacio.status).toBe(200);
+    expect(vacio.body.disponible).toBe(false);
+    expect(vacio.body.mensaje).toMatch(/No hay información/);
+    const predicciones = await request(app).get('/api/predicciones').set(auth);
+    expect(predicciones.status).toBe(200);
+    expect(predicciones.body).toEqual([]);
   });
 });

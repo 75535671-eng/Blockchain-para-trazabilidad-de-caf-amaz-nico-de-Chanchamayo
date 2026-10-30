@@ -1,0 +1,43 @@
+@if (eventos().length === 0) {
+  <p class="vacio">Este lote todavía no cuenta con eventos registrados.</p>
+} @else {
+  <ol class="linea">
+    @for (evento of eventos(); track evento.id) {
+      <li>
+        <button
+          type="button"
+          class="hito"
+          [class.activo]="seleccionado?.id === evento.id"
+          (click)="elegir(evento)"
+          [attr.aria-pressed]="seleccionado?.id === evento.id"
+        >
+          <span class="punto"></span>
+          <span class="cuando">{{ evento.fecha }}</span>
+          <strong>{{ etiquetaEtapa(evento.etapa) }}</strong>
+          <span class="resumen">{{ evento.descripcion }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+  @if (seleccionado) {
+    <article class="detalle">
+      <p class="marca">Detalle del evento</p>
+      <h3>{{ etiquetaEtapa(seleccionado.etapa) }}</h3>
+      <p>{{ seleccionado.descripcion }}</p>
+      <div class="meta">
+        <span>Fecha: {{ seleccionado.fecha }}</span>
+        <span>Etapa: {{ etiquetaEtapa(seleccionado.etapa) }}</span>
+      </div>
+      @if (seleccionado.variables) {
+        <div class="meta">
+          <span>Método de beneficio: {{ seleccionado.variables.metodoBeneficio }}</span>
+          <span>Humedad: {{ seleccionado.variables.humedadPorcentaje }} %</span>
+        </div>
+      } @else {
+        <p class="muted">Esta etapa no tiene variables productivas.</p>
+      }
+    </article>
+  } @else {
+    <p class="muted">Selecciona un evento para ver su detalle.</p>
+  }
+}

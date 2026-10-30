@@ -2,47 +2,101 @@
 @if (error) { <p class="alerta error">{{ error }}</p> }
 @if (!consulta && !error) { <p class="vacio">Cargando lote…</p> }
 @if (consulta) {
-  <article class="card">
-    <div class="lote-top">
-      <h1>{{ consulta.lote.codigo }}</h1>
-      <span class="badge">{{ consulta.lote.estado }}</span>
+  <header class="ficha-hero">
+    <img src="/login-cafe.jpg" alt="Cerezas de café" />
+    <div>
+      <p class="marca">Chanchamayo Coffee Trace</p>
+      <div class="lote-top">
+        <h1>{{ consulta.lote.codigo }}</h1>
+        <span class="badge">{{ consulta.lote.estado }}</span>
+      </div>
+      <p>Del origen a la calidad, cada lote cuenta una historia.</p>
     </div>
-    <div class="meta" style="margin-top: 0.8rem">
-      <span>Productor: {{ consulta.productor.nombre }}</span>
-      <span>Parcela: {{ consulta.parcela.nombre }}</span>
-      <span>Distrito: {{ consulta.parcela.distrito }}</span>
-      <span>Localidad: {{ consulta.parcela.localidad || '—' }}</span>
-      <span>Variedad: {{ consulta.lote.variedad }}</span>
-      <span>Cosecha: {{ consulta.lote.fechaCosecha }}</span>
-      <span>Peso: {{ consulta.lote.cantidadKg }} kg</span>
-    </div>
-    <p>Observaciones: {{ consulta.lote.observaciones || 'Sin observaciones' }}</p>
-  </article>
-  <article class="card" style="margin-top: 0.9rem">
-    <h2>Trazabilidad</h2>
-    <div class="trazabilidad">
-      <div class="paso">Productor · {{ consulta.productor.nombre }}</div>
-      <div class="flecha">↓</div>
-      <div class="paso">Parcela · {{ consulta.parcela.nombre }}, {{ consulta.parcela.distrito }}</div>
-      <div class="flecha">↓</div>
-      <div class="paso">Lote · {{ consulta.lote.codigo }}</div>
-      <div class="flecha">↓</div>
-      <div class="paso">Registro de producción · {{ consulta.lote.cantidadKg }} kg de {{ consulta.lote.variedad }}</div>
-    </div>
-  </article>
-  <article class="card" style="margin-top: 0.9rem">
-    <div class="meta">
-      <span>● Actualización automática</span>
-      <span>Estado del análisis: {{ estadoAnalisis }}</span>
-    </div>
-    <p class="muted">Última actualización: {{ textoActualizacion }}</p>
-  </article>
-  @if (consulta.ultimoAnalisis) {
-    <article class="card" style="margin-top: 0.9rem">
-      <h2>Resultado preliminar</h2>
-      <p class="muted">No es una certificación de calidad.</p>
-      <p><span class="badge">{{ consulta.ultimoAnalisis.clasificacion }}</span></p>
-      <p>{{ consulta.ultimoAnalisis.resumen }}</p>
+  </header>
+
+  <section class="fichas">
+    <article class="card">
+      <h2>Origen</h2>
+      <div class="meta">
+        <span>Productor: {{ consulta.productor.nombre }}</span>
+        <span>Organización: {{ consulta.productor.organizacion || '—' }}</span>
+        <span>Parcela: {{ consulta.parcela.nombre }}</span>
+        <span>Distrito: {{ consulta.parcela.distrito }}</span>
+        <span>Localidad: {{ consulta.parcela.localidad || '—' }}</span>
+        <span>Altitud: {{ consulta.parcela.altitudMsnm ?? 'No registrada' }}</span>
+        <span>Área: {{ consulta.parcela.areaHectareas }} ha</span>
+      </div>
     </article>
-  }
+    <article class="card">
+      <h2>Cosecha</h2>
+      <div class="meta">
+        <span>Variedad: {{ consulta.lote.variedad }}</span>
+        <span>Fecha: {{ consulta.lote.fechaCosecha }}</span>
+        <span>Peso: {{ consulta.lote.cantidadKg }} kg</span>
+        <span>Estado: {{ consulta.lote.estado }}</span>
+      </div>
+      <p>Observaciones: {{ consulta.lote.observaciones || 'Sin observaciones' }}</p>
+    </article>
+  </section>
+
+  <article class="card bloque">
+    <div class="lote-top">
+      <h2>Historial de trazabilidad</h2>
+      <a [routerLink]="['/eventos']" [queryParams]="{ lote: consulta.lote.id }">Registrar evento</a>
+    </div>
+    @if (errorHistorial) {
+      <p class="alerta error">{{ errorHistorial }}</p>
+    } @else if (!historialConsultado) {
+      <p class="vacio">Consultando el historial…</p>
+    } @else {
+      <app-historial-lote [eventos]="eventos" />
+    }
+  </article>
+
+  <article class="card bloque">
+    <h2>Variables productivas</h2>
+    @if (!historialConsultado) {
+      <p class="vacio">Consultando variables…</p>
+    } @else if (variables.length === 0) {
+      <p class="vacio">Este lote no tiene variables de beneficio registradas.</p>
+    } @else {
+      <ul class="variables">
+        @for (variable of variables; track variable.id) {
+          <li>{{ variable.fecha }} · {{ variable.metodo }} · humedad {{ variable.humedad }} %</li>
+        }
+      </ul>
+    }
+  </article>
+
+  <section class="fichas">
+    <article class="card">
+      <h2>Coherencia del registro</h2>
+      <p class="muted">Indicador de HU-006. No es una predicción de calidad.</p>
+      <p><span class="badge">{{ estadoAnalisis }}</span></p>
+      @if (consulta.ultimoAnalisis) {
+        <p><span class="badge">{{ consulta.ultimoAnalisis.clasificacion }}</span></p>
+        <p>{{ consulta.ultimoAnalisis.resumen }}</p>
+      } @else {
+        <p class="vacio">Todavía no hay un análisis de coherencia para este lote.</p>
+      }
+      <p class="muted">Última actualización: {{ textoActualizacion }}</p>
+    </article>
+    <article class="card">
+      <h2>Predicción de calidad</h2>
+      @if (errorPredicciones) {
+        <p class="alerta error">{{ errorPredicciones }}</p>
+      } @else if (predicciones.length === 0) {
+        <p class="vacio">No hay una predicción registrada para este lote.</p>
+      } @else {
+        @for (prediccion of predicciones; track prediccion.id) {
+          <p><span class="badge">{{ prediccion.calidad }}</span></p>
+          <p>{{ prediccion.referencia }}</p>
+          <p class="muted">{{ prediccion.modelo }}</p>
+        }
+      }
+      <a class="btn secundario" [routerLink]="['/inteligencia']" [queryParams]="{ lote: consulta.lote.id }">Ir al centro de inteligencia</a>
+    </article>
+  </section>
+
+  <p class="recorrido"><a [routerLink]="['/reportes']" [queryParams]="{ lote: consulta.lote.id }">Generar reporte de este lote</a></p>
 }

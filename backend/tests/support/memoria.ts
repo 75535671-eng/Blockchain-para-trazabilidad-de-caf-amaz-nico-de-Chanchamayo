@@ -1,5 +1,7 @@
 import { ConflictError, NotFoundError } from '../../src/domain/errors/DomainError';
 import { AnalisisLote } from '../../src/domain/entities/AnalisisLote';
+import { EventoTrazabilidad } from '../../src/domain/entities/EventoTrazabilidad';
+import { PrediccionCalidad } from '../../src/domain/entities/PrediccionCalidad';
 import { Lote } from '../../src/domain/entities/Lote';
 import { Parcela } from '../../src/domain/entities/Parcela';
 import { Productor } from '../../src/domain/entities/Productor';
@@ -7,7 +9,9 @@ import { SolicitudRegistro } from '../../src/domain/entities/SolicitudRegistro';
 import { Usuario } from '../../src/domain/entities/Usuario';
 import {
   AnalisisLoteRepositoryPort,
+  EventoTrazabilidadRepositoryPort,
   LoteRepositoryPort,
+  PrediccionCalidadRepositoryPort,
   ParcelaRepositoryPort,
   PasswordHasherPort,
   ProductorRepositoryPort,
@@ -24,6 +28,8 @@ export class Memoria {
   solicitudes: SolicitudRegistro[] = [];
   parcelas: Parcela[] = [];
   lotes: Lote[] = [];
+  eventos: EventoTrazabilidad[] = [];
+  predicciones: PrediccionCalidad[] = [];
   analisis: AnalisisLote[] = [];
   auditoria: { administradorId: string; productorId: string; fecha: Date }[] = [];
 }
@@ -148,8 +154,7 @@ export class MemoriaProductores implements ProductorRepositoryPort {
     }
     const parcelas = this.memoria.parcelas.filter((parcela) => parcela.productorId === id).map((parcela) => parcela.id);
     const lotes = this.memoria.lotes.filter((lote) => parcelas.includes(lote.parcelaId)).map((lote) => lote.id);
-    this.memoria.analisis = this.memoria.analisis.filter((analisis) => !lotes.includes(analisis.loteId));
-    this.memoria.lotes = this.memoria.lotes.filter((lote) => !lotes.includes(lote.id));
+    retirarLotes(this.memoria, lotes);
     this.memoria.parcelas = this.memoria.parcelas.filter((parcela) => parcela.productorId !== id);
     this.memoria.solicitudes = this.memoria.solicitudes.flatMap((solicitud) => {
       const esSuya =
@@ -262,7 +267,7 @@ export class MemoriaLotes implements LoteRepositoryPort {
     }
   }
   async eliminar(id: string) {
-    this.memoria.lotes = this.memoria.lotes.filter((lote) => lote.id !== id);
+    retirarLotes(this.memoria, [id]);
   }
   async buscarPorId(id: string) {
     return this.memoria.lotes.find((lote) => lote.id === id) ?? null;
@@ -276,6 +281,47 @@ export class MemoriaLotes implements LoteRepositoryPort {
   async listarPorParcelas(parcelaIds: string[]) {
     return this.memoria.lotes.filter((lote) => parcelaIds.includes(lote.parcelaId));
   }
+}
+
+export class MemoriaEventos implements EventoTrazabilidadRepositoryPort {
+  constructor(private readonly memoria: Memoria) {}
+  async guardar(evento: EventoTrazabilidad) {
+    this.memoria.eventos = [...this.memoria.eventos, evento];
+  }
+  async listarPorLote(loteId: string) {
+    return this.listarPorLotes([loteId]);
+  }
+  async listarPorLotes(loteIds: string[]) {
+    const ids = new Set(loteIds);
+    return this.memoria.eventos
+      .filter((evento) => ids.has(evento.loteId))
+      .slice()
+      .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+  }
+}
+
+export class MemoriaPredicciones implements PrediccionCalidadRepositoryPort {
+  constructor(private readonly memoria: Memoria) {}
+  async guardar(prediccion: PrediccionCalidad) {
+    this.memoria.predicciones = [...this.memoria.predicciones, prediccion];
+  }
+  async listarPorLote(loteId: string) {
+    return this.listarPorLotes([loteId]);
+  }
+  async listarPorLotes(loteIds: string[]) {
+    const ids = new Set(loteIds);
+    return this.memoria.predicciones
+      .filter((prediccion) => ids.has(prediccion.loteId))
+      .slice()
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+  }
+}
+
+function retirarLotes(memoria: Memoria, loteIds: string[]) {
+  memoria.predicciones = memoria.predicciones.filter((prediccion) => !loteIds.includes(prediccion.loteId));
+  memoria.eventos = memoria.eventos.filter((evento) => !loteIds.includes(evento.loteId));
+  memoria.analisis = memoria.analisis.filter((analisis) => !loteIds.includes(analisis.loteId));
+  memoria.lotes = memoria.lotes.filter((lote) => !loteIds.includes(lote.id));
 }
 
 export class MemoriaAnalisis implements AnalisisLoteRepositoryPort {

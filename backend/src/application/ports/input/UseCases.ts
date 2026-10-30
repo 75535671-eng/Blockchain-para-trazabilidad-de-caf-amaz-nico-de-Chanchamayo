@@ -1,4 +1,16 @@
-import { Actor, ConsultaLoteDto, LoteDto, ParcelaDto, ProductorDto, UsuarioDto } from '../../dto/dtos';
+import {
+  Actor,
+  ConsultaLoteDto,
+  EventoTrazabilidadDto,
+  IntentoPrediccionDto,
+  LoteDto,
+  ParcelaDto,
+  PrediccionCalidadDto,
+  ProductorDto,
+  ReporteTrazabilidadDto,
+  UsuarioDto,
+} from '../../dto/dtos';
+import { EvaluacionModelo } from '../../../domain/services/inteligencia/EvaluacionModeloPoc';
 import { RolUsuario } from '../../../domain/entities/Usuario';
 
 export interface RegistrarUsuarioUseCase {
@@ -206,4 +218,51 @@ export interface ConsultarLoteUseCase {
 
 export interface AnalizarLoteUseCase {
   ejecutar(comando: { actor: Actor; loteId: string }): Promise<ConsultaLoteDto>;
+}
+
+export interface RegistrarEventoUseCase {
+  ejecutar(comando: {
+    actor: Actor;
+    loteId: string;
+    etapa: string;
+    fecha: string;
+    descripcion: string;
+    metodoBeneficio?: string | null;
+    humedadPorcentaje?: number | null;
+  }): Promise<EventoTrazabilidadDto>;
+}
+
+export interface ListarEventosUseCase {
+  ejecutar(comando: { actor: Actor; loteId: string }): Promise<EventoTrazabilidadDto[]>;
+}
+
+export interface ListarEventosVisiblesUseCase {
+  ejecutar(actor: Actor): Promise<EventoTrazabilidadDto[]>;
+}
+
+export interface PredecirCalidadUseCase {
+  ejecutar(comando: { actor: Actor; loteId: string }): Promise<IntentoPrediccionDto>;
+}
+
+export interface ListarPrediccionesUseCase {
+  ejecutar(comando: { actor: Actor; loteId: string }): Promise<PrediccionCalidadDto[]>;
+}
+
+export interface ListarPrediccionesVisiblesUseCase {
+  ejecutar(actor: Actor): Promise<PrediccionCalidadDto[]>;
+}
+
+export interface ConsultarEvaluacionModeloUseCase {
+  ejecutar(): Promise<EvaluacionModelo>;
+}
+
+export interface GenerarReporteTrazabilidadUseCase {
+  ejecutar(comando: {
+    actor: Actor;
+    loteId?: string | null;
+    productorId?: string | null;
+    parcelaId?: string | null;
+    desde?: string | null;
+    hasta?: string | null;
+  }): Promise<ReporteTrazabilidadDto>;
 }

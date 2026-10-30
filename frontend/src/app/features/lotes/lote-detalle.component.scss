@@ -1,0 +1,40 @@
+.marca {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ficha-hero {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.ficha-hero img {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.fichas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+.bloque { margin-top: 0.9rem; }
+.variables { margin: 0.6rem 0 0; padding-left: 1.1rem; }
+.recorrido { margin-top: 1rem; }
+.btn { margin-top: 0.8rem; }
+
+@media (max-width: 720px) {
+  .ficha-hero, .fichas { grid-template-columns: 1fr; }
+  .ficha-hero img { width: 100%; height: 160px; }
+}

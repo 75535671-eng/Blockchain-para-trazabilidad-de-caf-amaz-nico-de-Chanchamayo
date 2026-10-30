@@ -1,0 +1,24 @@
+.marca {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.card { margin-top: 0.9rem; }
+.variables { margin: 0.9rem 0; }
+.resultado {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--cream) 55%, var(--white));
+  border-left: 4px solid var(--gold);
+}
+.resultado.disponible { border-left-color: var(--forest); }
+.resultado h3 { margin: 0.3rem 0; font-size: 1.8rem; }
+.estado { margin-top: 0.6rem; }
+.tabla { width: 100%; margin-top: 0.8rem; }
+ul { margin: 0.8rem 0 0; padding-left: 1.1rem; }
+li { margin: 0.35rem 0; }

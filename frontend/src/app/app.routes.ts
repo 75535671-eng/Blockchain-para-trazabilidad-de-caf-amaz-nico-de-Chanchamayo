@@ -40,6 +40,26 @@ export const routes: Routes = [
     loadComponent: () => import('./features/lotes/lote-detalle.component').then((m) => m.LoteDetalleComponent),
   },
   {
+    path: 'historial',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/historial/historial.component').then((m) => m.HistorialComponent),
+  },
+  {
+    path: 'reportes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/reportes/reportes.component').then((m) => m.ReportesComponent),
+  },
+  {
+    path: 'inteligencia',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/inteligencia/inteligencia.component').then((m) => m.InteligenciaComponent),
+  },
+  {
+    path: 'eventos',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/eventos/eventos.component').then((m) => m.EventosComponent),
+  },
+  {
     path: 'analisis',
     canActivate: [authGuard],
     loadComponent: () => import('./features/analisis/analisis.component').then((m) => m.AnalisisComponent),

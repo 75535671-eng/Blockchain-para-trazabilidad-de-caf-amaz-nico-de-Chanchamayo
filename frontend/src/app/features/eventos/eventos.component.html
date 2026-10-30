@@ -1,0 +1,83 @@
+<header class="page-head traza-cabecera">
+  <div>
+    <p class="traza-marca">Chanchamayo Coffee Trace</p>
+    <h1>Registro de eventos</h1>
+    <p>Del origen a la calidad, cada lote cuenta una historia.</p>
+  </div>
+</header>
+
+@if (error) { <p class="alerta error">{{ error }}</p> }
+@if (aviso) { <p class="alerta ok">{{ aviso }}</p> }
+
+@if (lotes.length === 0) {
+  <p class="vacio">Registra un lote para poder documentar sus eventos.</p>
+} @else {
+  <form class="card traza-form" [formGroup]="form" (ngSubmit)="registrar()">
+    <h2>Nuevo evento del recorrido</h2>
+    <div class="form-grid">
+      <label class="campo">Lote
+        <select formControlName="loteId" (change)="alCambiarLote()">
+          @for (lote of lotes; track lote.id) {
+            <option [value]="lote.id">{{ lote.codigo }} · {{ lote.productor }} · {{ lote.parcela }}</option>
+          }
+        </select>
+      </label>
+      <label class="campo">Etapa productiva
+        <select formControlName="etapa" (change)="alCambiarEtapa()">
+          <option value="" disabled>Selecciona una etapa</option>
+          @for (etapa of etapas; track etapa.valor) {
+            <option [value]="etapa.valor">{{ etapa.etiqueta }}</option>
+          }
+        </select>
+      </label>
+      <label class="campo">Fecha
+        <input formControlName="fecha" type="date" [attr.min]="loteSeleccionado?.fechaCosecha" />
+      </label>
+      <label class="campo campo-amplio">Descripción
+        <textarea formControlName="descripcion" rows="3" maxlength="500" placeholder="Qué ocurrió con este lote en la etapa"></textarea>
+      </label>
+      @if (esBeneficio) {
+        <label class="campo">Método de beneficio
+          <select formControlName="metodoBeneficio">
+            <option value="" disabled>Selecciona un método</option>
+            @for (metodo of metodos; track metodo) {
+              <option [value]="metodo">{{ metodo }}</option>
+            }
+          </select>
+        </label>
+        <label class="campo">Humedad (%)
+          <input formControlName="humedadPorcentaje" type="number" min="0" max="100" step="0.01" />
+        </label>
+      }
+    </div>
+    <p class="muted">En beneficio, el método y la humedad se guardan con el evento. Las demás etapas no piden variables.</p>
+    <button class="btn" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Registrar evento' }}</button>
+  </form>
+
+  <section class="card traza-lista">
+    <h2>Eventos registrados</h2>
+    @if (loteSeleccionado) {
+      <p class="muted">{{ loteSeleccionado.codigo }} · {{ loteSeleccionado.productor }} · {{ loteSeleccionado.parcela }}</p>
+    }
+    @if (consultando) {
+      <p class="vacio">Consultando eventos…</p>
+    } @else if (eventos.length === 0) {
+      <p class="vacio">Todavía no hay eventos registrados para este lote.</p>
+    } @else {
+      <ol class="recorrido">
+        @for (evento of eventos; track evento.id) {
+          <li>
+            <span class="fecha">{{ evento.fecha }}</span>
+            <div>
+              <strong>{{ etiquetaEtapa(evento.etapa) }}</strong>
+              <p>{{ evento.descripcion }}</p>
+              @if (evento.variables) {
+                <p class="variables">{{ evento.variables.metodoBeneficio }} · humedad {{ evento.variables.humedadPorcentaje }} %</p>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+}

@@ -3,6 +3,7 @@ dist/
 coverage/
 .env
 backend/.env
+backend/.local-pg/
 frontend/.angular/
 frontend/dist/
 .vercel/

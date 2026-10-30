@@ -1,3 +1,4 @@
+import { EtapaTrazabilidad, MetodoBeneficio } from '../../domain/catalogos/registro';
 import { RolUsuario } from '../../domain/entities/Usuario';
 
 export interface Actor {
@@ -63,4 +64,65 @@ export interface ConsultaLoteDto {
   parcela: ParcelaDto;
   productor: ProductorDto;
   ultimoAnalisis: AnalisisLoteDto | null;
+}
+
+export interface VariableBeneficioDto {
+  id: string;
+  metodoBeneficio: MetodoBeneficio;
+  humedadPorcentaje: number;
+}
+
+export interface EventoTrazabilidadDto {
+  id: string;
+  loteId: string;
+  etapa: EtapaTrazabilidad;
+  fecha: string;
+  descripcion: string;
+  variables: VariableBeneficioDto | null;
+  createdAt: string;
+}
+
+export interface PrediccionCalidadDto {
+  id: string;
+  loteId: string;
+  calidad: string;
+  modelo: string;
+  referencia: string;
+  createdAt: string;
+}
+
+export interface VariablesCalidadDto {
+  variedad: string | null;
+  altitudMsnm: number | null;
+  metodoBeneficio: string | null;
+  humedadPorcentaje: number | null;
+}
+
+export interface IntentoPrediccionDto {
+  estado: 'datos_insuficientes' | 'no_disponible' | 'disponible';
+  mensaje: string | null;
+  variables: VariablesCalidadDto;
+  prediccion: PrediccionCalidadDto | null;
+}
+
+export interface ReporteLoteDto {
+  loteId: string;
+  codigo: string;
+  estado: string;
+  variedad: string;
+  fechaCosecha: string;
+  cantidadKg: number;
+  productor: string;
+  organizacion: string | null;
+  parcela: string;
+  distrito: string;
+  localidad: string | null;
+  altitudMsnm: number | null;
+  eventos: EventoTrazabilidadDto[];
+}
+
+export interface ReporteTrazabilidadDto {
+  disponible: boolean;
+  mensaje: string | null;
+  lotes: ReporteLoteDto[];
 }

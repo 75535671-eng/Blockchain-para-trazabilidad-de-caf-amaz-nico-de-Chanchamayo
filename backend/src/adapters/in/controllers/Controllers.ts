@@ -26,6 +26,14 @@ import {
   ListarProductoresUseCase,
   OtorgarAdministradorUseCase,
   QuitarAdministradorUseCase,
+  ConsultarEvaluacionModeloUseCase,
+  GenerarReporteTrazabilidadUseCase,
+  ListarEventosUseCase,
+  ListarEventosVisiblesUseCase,
+  ListarPrediccionesUseCase,
+  ListarPrediccionesVisiblesUseCase,
+  PredecirCalidadUseCase,
+  RegistrarEventoUseCase,
   RegistrarLoteUseCase,
   RegistrarParcelaUseCase,
   RegistrarProductorUseCase,
@@ -239,6 +247,91 @@ export class LoteController {
   eliminarUno = async (req: Request, res: Response): Promise<void> => {
     await this.eliminar.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) });
     res.status(204).send();
+  };
+}
+
+const eventoSchema = z.object({
+  etapa: z.string(),
+  fecha: z.string(),
+  descripcion: z.string(),
+  metodoBeneficio: z.string().nullable().optional(),
+  humedadPorcentaje: z.number().nullable().optional(),
+});
+
+export class EventoController {
+  constructor(
+    private readonly registrar: RegistrarEventoUseCase,
+    private readonly listar: ListarEventosUseCase,
+    private readonly listarVisibles: ListarEventosVisiblesUseCase,
+  ) {}
+
+  crear = async (req: Request, res: Response): Promise<void> => {
+    const cuerpo = validarCuerpo(eventoSchema, req);
+    res.status(201).json(
+      await this.registrar.ejecutar({
+        actor: actorDe(res),
+        loteId: String(req.params.id),
+        etapa: cuerpo.etapa,
+        fecha: cuerpo.fecha,
+        descripcion: cuerpo.descripcion,
+        metodoBeneficio: cuerpo.metodoBeneficio ?? null,
+        humedadPorcentaje: cuerpo.humedadPorcentaje ?? null,
+      }),
+    );
+  };
+
+  listarDelLote = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.listar.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) }));
+  };
+
+  listarTodos = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.listarVisibles.ejecutar(actorDe(res)));
+  };
+}
+
+function consultaTexto(valor: unknown): string | null {
+  return typeof valor === 'string' && valor.trim() ? valor.trim() : null;
+}
+
+export class InteligenciaController {
+  constructor(
+    private readonly predecir: PredecirCalidadUseCase,
+    private readonly listar: ListarPrediccionesUseCase,
+    private readonly listarVisibles: ListarPrediccionesVisiblesUseCase,
+    private readonly evaluar: ConsultarEvaluacionModeloUseCase,
+  ) {}
+
+  predecirUno = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.predecir.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) }));
+  };
+
+  listarDelLote = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.listar.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) }));
+  };
+
+  listarTodas = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.listarVisibles.ejecutar(actorDe(res)));
+  };
+
+  evaluacion = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.evaluar.ejecutar());
+  };
+}
+
+export class ReporteController {
+  constructor(private readonly generar: GenerarReporteTrazabilidadUseCase) {}
+
+  consultar = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(
+      await this.generar.ejecutar({
+        actor: actorDe(res),
+        loteId: consultaTexto(req.query.loteId),
+        productorId: consultaTexto(req.query.productorId),
+        parcelaId: consultaTexto(req.query.parcelaId),
+        desde: consultaTexto(req.query.desde),
+        hasta: consultaTexto(req.query.hasta),
+      }),
+    );
   };
 }
 

@@ -1,0 +1,85 @@
+<header class="page-head">
+  <div>
+    <p class="marca">Centro de inteligencia del café</p>
+    <h1>Calidad del lote</h1>
+    <p>La predicción de calidad es independiente del análisis de coherencia del registro.</p>
+  </div>
+</header>
+
+@if (error) { <p class="alerta error">{{ error }}</p> }
+
+<section class="card">
+  <h2>Predicción</h2>
+  @if (lotes.length === 0) {
+    <p class="vacio">Registra un lote para revisar sus variables.</p>
+  } @else {
+    <label class="campo" style="max-width: 520px">Lote
+      <select [(ngModel)]="loteId" (ngModelChange)="alCambiarLote()">
+        @for (lote of lotes; track lote.id) {
+          <option [value]="lote.id">{{ lote.codigo }} · {{ lote.variedad }}</option>
+        }
+      </select>
+    </label>
+    @if (lote) {
+      <div class="meta variables">
+        <span>Variedad: {{ lote.variedad }}</span>
+        <span>Altitud: {{ lote.altitudMsnm ?? 'No registrada' }}</span>
+        <span>Método: {{ beneficio?.variables?.metodoBeneficio ?? 'No registrado' }}</span>
+        <span>Humedad: {{ beneficio?.variables?.humedadPorcentaje ?? 'No registrada' }}</span>
+      </div>
+      <button type="button" class="btn" (click)="ejecutar()" [disabled]="ejecutando">
+        {{ ejecutando ? 'Consultando…' : 'Ejecutar predicción' }}
+      </button>
+    }
+    @if (intento) {
+      <article class="resultado" [class.disponible]="intento.estado === 'disponible'">
+        @if (intento.estado === 'disponible' && intento.prediccion) {
+          <p class="marca">Resultado del modelo</p>
+          <h3>{{ intento.prediccion.calidad }}</h3>
+          <p>{{ intento.prediccion.referencia }}</p>
+          <p class="muted">Modelo: {{ intento.prediccion.modelo }}</p>
+        } @else {
+          <p class="marca">Sin predicción</p>
+          <p>{{ intento.mensaje }}</p>
+        }
+      </article>
+    }
+  }
+</section>
+
+<section class="card">
+  <h2>Evaluación del modelo</h2>
+  @if (!evaluacion) {
+    <p class="vacio">Cargando la evidencia disponible…</p>
+  } @else {
+    <p><span class="badge estado">{{ evaluacion.estado === 'NO_CONCLUYENTE' ? 'Evaluación no concluyente' : evaluacion.estado }}</span></p>
+    <div class="meta">
+      <span>{{ evaluacion.identificador }}</span>
+      <span>{{ evaluacion.algoritmo }}</span>
+      <span>Entrenamiento: {{ evaluacion.registrosEntrenamiento }}</span>
+      <span>Prueba: {{ evaluacion.registrosPrueba }}</span>
+      <span>random_state {{ evaluacion.randomState }}</span>
+    </div>
+    <p class="muted">Dataset: {{ evaluacion.dataset }}. {{ evaluacion.datasetDisponible ? 'Disponible en el repositorio.' : 'No está en el repositorio.' }} Modelo exportado: {{ evaluacion.modeloExportado ? 'sí' : 'no' }}.</p>
+    <table class="tabla">
+      <thead>
+        <tr><th>Métrica histórica de calidad</th><th>Resultado del notebook</th><th>Meta del notebook</th></tr>
+      </thead>
+      <tbody>
+        @for (metrica of evaluacion.metricasHistoricas; track metrica.nombre) {
+          <tr>
+            <td>{{ metrica.nombre }}</td>
+            <td>{{ metrica.resultado }}</td>
+            <td>{{ metrica.meta }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="muted">Decisión impresa en el notebook: {{ evaluacion.decisionHistorica }}. No corresponde al desempeño de un modelo integrado.</p>
+    <ul>
+      @for (limite of evaluacion.limitaciones; track limite) {
+        <li>{{ limite }}</li>
+      }
+    </ul>
+  }
+</section>

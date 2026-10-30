@@ -1,0 +1,97 @@
+<header class="page-head">
+  <div>
+    <p class="marca">Chanchamayo Coffee Trace</p>
+    <h1>Reportes de trazabilidad</h1>
+    <p>Consulta y descarga la información registrada de los lotes.</p>
+  </div>
+</header>
+
+@if (error) { <p class="alerta error">{{ error }}</p> }
+
+<form class="card filtros" (ngSubmit)="consultar()">
+  <div class="form-grid">
+    @if (auth.sesion()?.rol === 'ADMINISTRADOR') {
+      <label class="campo">Productor
+        <select [(ngModel)]="productorId" name="productorId">
+          <option value="">Todos</option>
+          @for (productor of productores; track productor.id) {
+            <option [value]="productor.id">{{ productor.nombre }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label class="campo">Parcela
+      <select [(ngModel)]="parcelaId" name="parcelaId">
+        <option value="">Todas</option>
+        @for (parcela of parcelasVisibles; track parcela.id) {
+          <option [value]="parcela.id">{{ parcela.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label class="campo">Lote
+      <select [(ngModel)]="loteId" name="loteId">
+        <option value="">Todos</option>
+        @for (lote of lotesVisibles; track lote.id) {
+          <option [value]="lote.id">{{ lote.codigo }}</option>
+        }
+      </select>
+    </label>
+    <label class="campo">Desde <input type="date" [(ngModel)]="desde" name="desde" /></label>
+    <label class="campo">Hasta <input type="date" [(ngModel)]="hasta" name="hasta" /></label>
+  </div>
+  <div class="acciones">
+    <button class="btn" [disabled]="consultando">{{ consultando ? 'Consultando…' : 'Consultar' }}</button>
+    @if (reporte?.disponible) {
+      <button type="button" class="btn secundario" (click)="descargar(reporte!)">Descargar reporte</button>
+    }
+  </div>
+</form>
+
+@if (reporte && !reporte.disponible) {
+  <p class="vacio">{{ reporte.mensaje }}</p>
+}
+
+@if (reporte?.disponible) {
+  <section class="resumen">
+    <article class="card"><span class="muted">Lotes en el reporte</span><strong>{{ reporte!.lotes.length }}</strong></article>
+    <article class="card"><span class="muted">Eventos incluidos</span><strong>{{ eventosDelReporte }}</strong></article>
+  </section>
+  @for (lote of reporte!.lotes; track lote.loteId) {
+    <article class="card ficha">
+      <div class="lote-top">
+        <h2>{{ lote.codigo }}</h2>
+        <a [routerLink]="['/lotes', lote.loteId]">Abrir ficha</a>
+      </div>
+      <div class="meta">
+        <span>{{ lote.productor }}</span>
+        <span>{{ lote.parcela }} · {{ lote.distrito }}</span>
+        <span>{{ lote.variedad }}</span>
+        <span>{{ lote.cantidadKg }} kg</span>
+        <span>Cosecha {{ lote.fechaCosecha }}</span>
+      </div>
+      @if (lote.eventos.length === 0) {
+        <p class="muted">Sin eventos en el criterio consultado.</p>
+      } @else {
+        <table class="tabla">
+          <thead><tr><th>Fecha</th><th>Etapa</th><th>Descripción</th><th>Variables</th></tr></thead>
+          <tbody>
+            @for (evento of lote.eventos; track evento.id) {
+              <tr>
+                <td>{{ evento.fecha }}</td>
+                <td>{{ etiquetaEtapa(evento.etapa) }}</td>
+                <td>{{ evento.descripcion }}</td>
+                <td>
+                  @if (evento.variables) {
+                    {{ evento.variables.metodoBeneficio }} · {{ evento.variables.humedadPorcentaje }} %
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </article>
+  }
+}

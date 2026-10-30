@@ -1,6 +1,6 @@
 import path from 'path';
 import dotenv from 'dotenv';
-import { AuthController, LoteController, ParcelaController, ProductorController, SolicitudController } from '../../adapters/in/controllers/Controllers';
+import { AuthController, EventoController, InteligenciaController, LoteController, ParcelaController, ProductorController, ReporteController, SolicitudController } from '../../adapters/in/controllers/Controllers';
 import { ExternalAIAdapter } from '../../adapters/out/ai/ExternalAIAdapter';
 import { ConsultaDniAdapter } from '../../adapters/out/dni/ConsultaDniAdapter';
 import {
@@ -12,10 +12,17 @@ import {
   PostgresSolicitudRegistroRepository,
   PostgresUsuarioRepository,
 } from '../../adapters/out/persistence/PostgresRepositories';
+import { PostgresEventoTrazabilidadRepository } from '../../adapters/out/persistence/PostgresEventoRepository';
+import { PostgresPrediccionCalidadRepository } from '../../adapters/out/persistence/PostgresPrediccionRepository';
+import { PredictorCalidadNoIntegrado } from '../../adapters/out/prediccion/PredictorCalidadNoIntegrado';
 import { BcryptPasswordHasher, JwtTokenProvider } from '../../adapters/out/security/SecurityAdapters';
 import { ActualizarProductor, ConsultarDniProductor, EliminarProductor, ListarProductores, OtorgarAdministrador, QuitarAdministrador, RegistrarProductor } from '../../application/usecases/ProductorUseCases';
 import { AnalizarLote } from '../../application/usecases/AnalizarLote';
 import { CambiarContrasena, ConsultarSesion, IniciarSesion } from '../../application/usecases/IniciarSesion';
+import { ConsultarEvaluacionModelo } from '../../application/usecases/ConsultarEvaluacionModelo';
+import { ListarEventos, ListarEventosVisibles, RegistrarEvento } from '../../application/usecases/EventoUseCases';
+import { GenerarReporteTrazabilidad } from '../../application/usecases/GenerarReporteTrazabilidad';
+import { ListarPredicciones, ListarPrediccionesVisibles, PredecirCalidad } from '../../application/usecases/PredecirCalidad';
 import { ActualizarLote, ConsultarLote, EliminarLote, ListarLotes, RegistrarLote } from '../../application/usecases/LoteUseCases';
 import { ActualizarParcela, EliminarParcela, ListarParcelas, RegistrarParcela } from '../../application/usecases/ParcelaUseCases';
 import { CrearCuentaProductor } from '../../application/usecases/RegistrarUsuario';
@@ -72,6 +79,9 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
   const parcelas = new PostgresParcelaRepository(pool);
   const lotes = new PostgresLoteRepository(pool);
   const analisis = new PostgresAnalisisLoteRepository(pool);
+  const eventos = new PostgresEventoTrazabilidadRepository(pool);
+  const predicciones = new PostgresPrediccionCalidadRepository(pool);
+  const predictor = new PredictorCalidadNoIntegrado();
   const solicitudes = new PostgresSolicitudRegistroRepository(pool);
   const hasher = new BcryptPasswordHasher();
   const tokens = new JwtTokenProvider(config.jwtSecret, config.jwtExpiresIn);
@@ -123,7 +133,19 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
       new ConsultarLote(lotes, parcelas, productores, analisis),
       new AnalizarLote(lotes, parcelas, productores, analisis, ia, selector),
       new ActualizarLote(lotes, parcelas, productores),
-      new EliminarLote(lotes, parcelas, productores, analisis),
+      new EliminarLote(lotes, parcelas, productores),
     ),
+    eventos: new EventoController(
+      new RegistrarEvento(eventos, lotes, parcelas, productores),
+      new ListarEventos(eventos, lotes, parcelas, productores),
+      new ListarEventosVisibles(eventos, lotes, parcelas, productores),
+    ),
+    inteligencia: new InteligenciaController(
+      new PredecirCalidad(lotes, parcelas, productores, eventos, predicciones, predictor),
+      new ListarPredicciones(lotes, parcelas, productores, predicciones),
+      new ListarPrediccionesVisibles(lotes, parcelas, productores, predicciones),
+      new ConsultarEvaluacionModelo(),
+    ),
+    reportes: new ReporteController(new GenerarReporteTrazabilidad(lotes, parcelas, productores, eventos)),
   };
 }

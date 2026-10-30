@@ -1,0 +1,81 @@
+.linea {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hito {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1rem 6.4rem 8.5rem 1fr;
+  gap: 0.7rem;
+  align-items: center;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--cream) 48%, var(--white));
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+}
+
+.hito.activo {
+  border-color: var(--gold);
+  background: var(--white);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.punto {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--forest-2);
+}
+
+.hito.activo .punto {
+  background: var(--gold);
+}
+
+.cuando {
+  color: var(--gold);
+  font-weight: 750;
+}
+
+.resumen {
+  color: var(--muted);
+}
+
+.detalle {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+
+.detalle h3 {
+  margin: 0.2rem 0 0.4rem;
+}
+
+.marca {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .hito {
+    grid-template-columns: 1rem 1fr;
+  }
+
+  .resumen,
+  .cuando {
+    grid-column: 2;
+  }
+}

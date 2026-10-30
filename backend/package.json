@@ -8,12 +8,14 @@
     "start": "node dist/infrastructure/http/server.js",
     "test": "vitest run",
     "lint": "eslint src tests",
-    "seed": "tsx src/infrastructure/configuration/seed.ts"
+    "seed": "tsx src/infrastructure/configuration/seed.ts",
+    "db:local": "node scripts/postgres-local.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "embedded-postgres": "^18.4.0-beta.17",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.23.1",

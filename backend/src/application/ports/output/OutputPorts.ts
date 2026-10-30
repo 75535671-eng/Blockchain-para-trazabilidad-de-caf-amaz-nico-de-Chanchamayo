@@ -1,5 +1,7 @@
 import { AnalisisLote } from '../../../domain/entities/AnalisisLote';
+import { EventoTrazabilidad } from '../../../domain/entities/EventoTrazabilidad';
 import { Lote } from '../../../domain/entities/Lote';
+import { PrediccionCalidad } from '../../../domain/entities/PrediccionCalidad';
 import { Parcela } from '../../../domain/entities/Parcela';
 import { Productor } from '../../../domain/entities/Productor';
 import { SolicitudRegistro } from '../../../domain/entities/SolicitudRegistro';
@@ -57,6 +59,34 @@ export interface LoteRepositoryPort {
   buscarPorCodigo(codigo: string): Promise<Lote | null>;
   listar(): Promise<Lote[]>;
   listarPorParcelas(parcelaIds: string[]): Promise<Lote[]>;
+}
+
+export interface EventoTrazabilidadRepositoryPort {
+  guardar(evento: EventoTrazabilidad): Promise<void>;
+  listarPorLote(loteId: string): Promise<EventoTrazabilidad[]>;
+  listarPorLotes(loteIds: string[]): Promise<EventoTrazabilidad[]>;
+}
+
+export interface PrediccionCalidadRepositoryPort {
+  guardar(prediccion: PrediccionCalidad): Promise<void>;
+  listarPorLote(loteId: string): Promise<PrediccionCalidad[]>;
+  listarPorLotes(loteIds: string[]): Promise<PrediccionCalidad[]>;
+}
+
+export interface EntradaPrediccionCalidad {
+  loteId: string;
+  variedad: string;
+  altitudMsnm: number;
+  metodoBeneficio: string;
+  humedadPorcentaje: number;
+}
+
+export type ResultadoPredictorCalidad =
+  | { estado: 'disponible'; calidad: string; modelo: string; referencia: string }
+  | { estado: 'no_disponible'; motivo: string };
+
+export interface PredictorCalidadPort {
+  predecir(entrada: EntradaPrediccionCalidad): Promise<ResultadoPredictorCalidad>;
 }
 
 export interface AnalisisLoteRepositoryPort {

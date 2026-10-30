@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Blockchain para trazabilidad de café amazónico de Chanchamayo</title>
+  <style>
+    @page { size: A4; margin: 16mm 15mm 18mm; }
+    @page :first { margin: 0; }
+    * { box-sizing: border-box; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body {
+      margin: 0;
+      color: #351903;
+      background: #fff;
+      font-family: "Segoe UI", Calibri, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.2; margin: 0 0 0.4em; }
+    h1 { font-size: 18pt; color: #351903; }
+    h2 { font-size: 14.5pt; color: #365004; margin-top: 0.9em; }
+    h3 { font-size: 12pt; color: #925e06; margin-top: 0.75em; }
+    p { margin: 0 0 0.55em; }
+    .cover {
+      min-height: 297mm;
+      background: #351903;
+      color: #f7f0e3;
+      padding: 18mm 16mm 14mm;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12mm;
+    }
+    .kicker {
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 8.5pt;
+      color: #ede383;
+      margin: 0 0 8mm;
+    }
+    .cover h1 {
+      color: #fffbf4;
+      font-size: 26pt;
+      max-width: 150mm;
+      margin-bottom: 5mm;
+    }
+    .cover .identidad {
+      color: #ede383;
+      font-size: 13pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8mm;
+    }
+    .cover p.lead { max-width: 155mm; color: #f7f0e3; font-size: 12pt; }
+    .franja {
+      height: 4px;
+      width: 42mm;
+      background: #925e06;
+      margin: 6mm 0;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm 10mm;
+      margin-top: 8mm;
+      max-width: 160mm;
+    }
+    .meta div {
+      border-top: 1px solid rgba(237, 227, 131, 0.45);
+      padding-top: 2mm;
+    }
+    .meta span { display: block; font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: #c4a574; }
+    .meta strong { font-weight: 600; color: #fffbf4; }
+    .cover img.foto {
+      width: 100%;
+      height: 78mm;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-top: 10mm;
+      border: 1px solid #925e06;
+    }
+    .logo-cover { width: 42mm; background: transparent; }
+    .pagina { page-break-after: always; }
+    .pagina:last-child { page-break-after: auto; }
+    .indice a { color: #351903; text-decoration: none; }
+    .indice li { margin: 0.28em 0; }
+    .nota {
+      background: #f7f0e3;
+      border-left: 4px solid #925e06;
+      padding: 3mm 4mm;
+      margin: 3mm 0 5mm;
+    }
+    .aviso {
+      background: #f4ebdd;
+      border: 1px solid #c4a574;
+      padding: 3mm 4mm;
+      margin: 3mm 0;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9.5pt; }
+    th, td { border: 1px solid #e6d7c4; padding: 2.2mm 2.4mm; vertical-align: top; text-align: left; }
+    th { background: #365004; color: #f7f3e6; font-weight: 600; }
+    tr:nth-child(even) td { background: #f7f0e3; }
+    .diagrama {
+      background: #fffbf4;
+      border: 1px solid #e6d7c4;
+      border-radius: 6px;
+      padding: 3mm;
+      margin: 3mm 0 5mm;
+    }
+    .diagrama svg { width: 100%; height: auto; }
+    figure { margin: 3mm 0 5mm; }
+    figure img { width: 100%; border: 1px solid #e6d7c4; border-radius: 4px; }
+    figcaption { font-size: 9pt; color: #5c4634; margin-top: 1.5mm; }
+    .ficha {
+      display: grid;
+      grid-template-columns: 28mm 1fr;
+      gap: 1mm 3mm;
+      font-size: 10pt;
+      margin-bottom: 4mm;
+    }
+    .ficha dt { color: #925e06; font-weight: 700; }
+    .ficha dd { margin: 0; }
+    ul { margin: 0.2em 0 0.7em; padding-left: 1.15em; }
+    li { margin: 0.15em 0; }
+    .pie-seccion { font-size: 9pt; color: #5c4634; }
+    .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    .tarjeta {
+      background: #f7f0e3;
+      border-top: 4px solid #365004;
+      padding: 3mm;
+    }
+    .tarjeta h3 { margin-top: 0; }
+    .estado-ok { color: #365004; font-weight: 700; }
+    .estado-parcial { color: #925e06; font-weight: 700; }
+    .estado-no { color: #8d2f32; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="kicker">Feria universitaria de Ingeniería de Sistemas e Informática</p>
+  <div class="cover-top">
+    <div>
+      <h1>Blockchain para trazabilidad de café amazónico de Chanchamayo</h1>
+      <p class="identidad">Chanchamayo · Café peruano</p>
+      <div class="franja"></div>
+      <p class="lead">Informe de problemática, solución tecnológica, impacto y evidencias de funcionamiento. El documento distingue el incremento ya construido del producto final todavía previsto.</p>
+    </div>
+    <img class="logo-cover" src="../frontend/public/logo.png" alt="Chanchamayo, café peruano" />
+  </div>
+  <div class="meta">
+    <div><span>Incremento en código</span><strong>PMV1</strong></div>
+    <div><span>Producto final</span><strong>Trazabilidad verificable</strong></div>
+    <div><span>Fecha del informe</span><strong>29 de octubre de 2026</strong></div>
+    <div><span>Base del informe</span><strong>Repositorio y ejecución local</strong></div>
+  </div>
+  <img class="foto" src="../frontend/public/login-cafe.jpg" alt="Cerezas de café, imagen de la pantalla de acceso del sistema" />
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Contenido</p>
+  <h1>Índice</h1>
+  <ol class="indice">
+    <li>Problemática</li>
+    <li>Solución tecnológica</li>
+    <li>Papel previsto de Blockchain</li>
+    <li>Innovación y diferenciación</li>
+    <li>Impacto esperado</li>
+    <li>Evolución del producto</li>
+    <li>Evidencias del funcionamiento</li>
+    <li>Conclusiones</li>
+  </ol>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Aspecto 1</p>
+  <h1>Problemática</h1>
+  <p>El proyecto parte de una dificultad concreta: garantizar una trazabilidad integrada y verificable de los lotes de café amazónico de Chanchamayo. El origen de un café puede estar repartido entre la ficha del productor, el cuaderno de la parcela, el peso de la cosecha y la palabra de quien lo comercializa. Cuando esas piezas no viven en un mismo registro, un comprador no puede reconstruir la historia del lote y un productor no puede mostrarla de forma ordenada.</p>
+  <h2>Causas que el sistema intenta atender</h2>
+  <div class="dos">
+    <article class="tarjeta">
+      <h3>Origen difícil de verificar</h3>
+      <p>Sin un vínculo estable entre productor, parcela y lote, el nombre de la zona no demuestra de qué finca salió ese café.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Información fragmentada</h3>
+      <p>Documento, distrito, variedad, fecha y kilogramos suelen quedar en soportes distintos. Consultarlos juntos exige reunir papeles.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Registros tradicionales</h3>
+      <p>Un cuaderno o una hoja de cálculo local se pierden, se copian a mano y no distinguen quién puede ver o modificar cada ficha.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Integridad poco comprobable</h3>
+      <p>Si alguien cambia una fecha o un peso después del registro, el soporte tradicional no deja una prueba independiente de esa alteración.</p>
+    </article>
+  </div>
+  <h2>Consecuencias</h2>
+  <p>Para el productor, la consecuencia es que su café compite sin una historia consultable. Puede haber cultivado en un distrito reconocido y aun así no tener cómo mostrar, en un solo lugar, la parcela, la variedad y la cantidad del lote. Para el comprador, la consecuencia es confiar en una afirmación de origen que no puede recorrer. La falta de un historial consultable debilita la transparencia de la cadena y deja la confianza apoyada en la relación personal, no en el registro.</p>
+  <p>Este informe no aporta cifras de producción, de pérdida ni de mercado. Esas magnitudes no están medidas en el repositorio. La problemática se sostiene por la naturaleza del registro fragmentado y por el problema declarado en la documentación del propio PMV1.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Aspecto 2</p>
+  <h1>Solución tecnológica</h1>
+  <p>La solución propuesta es una plataforma web que registra a los participantes y el origen de cada lote, y que, en su forma final, permitirá verificar que esos registros no fueron alterados. Hoy está construido el primer incremento. El anclaje en Blockchain es la continuación documentada, no una función ya usable.</p>
+  <h2>Lo que el PMV1 ya hace</h2>
+  <ul>
+    <li><strong>Productores.</strong> El administrador registra fichas con nombre, DNI o RUC, teléfono y organización. Puede actualizarlas y eliminarlas. La eliminación borra en una sola transacción la ficha, la cuenta vinculada, sus parcelas, lotes y análisis, y deja una auditoría con fecha, administrador e identificador, sin copiar la contraseña ni el documento.</li>
+    <li><strong>Parcelas.</strong> Cada parcela queda ligada a un productor. El distrito debe ser La Merced, Perené, Pichanaqui, San Ramón, San Luis de Shuaro, Vitoc o Sangani. Se guardan localidad, hectáreas, altitud y, si se informan juntas, las coordenadas.</li>
+    <li><strong>Lotes.</strong> Un lote pertenece a una parcela. El sistema genera un código con prefijo <em>CHNY</em>, el año y una semilla. La variedad admitida es Caturra, Typica, Bourbon o Pache. El estado inicial es <em>REGISTRADO</em>.</li>
+    <li><strong>Consulta.</strong> Al abrir un lote se ve el productor, la parcela, el distrito, la variedad, la fecha, el peso y una cadena visual: productor, parcela, lote y registro de producción.</li>
+    <li><strong>Usuarios y permisos.</strong> Hay dos roles: administrador y productor. El registro público crea una solicitud pendiente y no abre sesión. El administrador la aprueba o la rechaza. También puede crear una cuenta temporal, que obliga a cambiar la contraseña, y otorgar o retirar el rol de administrador.</li>
+    <li><strong>Indicador de coherencia.</strong> Desde el lote se puede pedir a una API externa de inteligencia artificial que revise si los datos ya guardados se sostienen entre sí. El resultado es <em>COHERENTE</em>, <em>REVISAR</em> o <em>INSUFICIENTE</em>. No certifica calidad, no predice cosecha y no clasifica el café en taza.</li>
+  </ul>
+  <div class="aviso">El panel anuncia una zona de actividad reciente y declara, en la propia pantalla, que el PMV1 todavía no guarda un historial de eventos. Esa zona no es trazabilidad de cadena ni Blockchain.</div>
+</section>
+
+<section class="pagina">
+  <h2>Cómo se relacionan las piezas actuales</h2>
+  <p>La pantalla no habla con la base de datos. Angular llama a la API. Express entrega la petición a un controlador. El controlador llama a un caso de uso. El caso de uso aplica las reglas del dominio y pide guardar o leer mediante un puerto. El repositorio PostgreSQL ejecuta el SQL. El único archivo que une las clases concretas es el contenedor de arranque.</p>
+  <div class="diagrama">
+    <svg viewBox="0 0 680 168" role="img" aria-label="Arquitectura actual del PMV1">
+      <rect x="8" y="48" width="100" height="52" rx="6" fill="#365004"/>
+      <text x="58" y="78" text-anchor="middle" fill="#f7f3e6" font-size="12" font-family="Segoe UI">Angular</text>
+      <rect x="140" y="48" width="100" height="52" rx="6" fill="#351903"/>
+      <text x="190" y="72" text-anchor="middle" fill="#f7f3e6" font-size="12" font-family="Segoe UI">API</text>
+      <text x="190" y="88" text-anchor="middle" fill="#ede383" font-size="10" font-family="Segoe UI">Express</text>
+      <rect x="272" y="28" width="150" height="92" rx="6" fill="#f7f0e3" stroke="#925e06"/>
+      <text x="347" y="58" text-anchor="middle" fill="#351903" font-size="12" font-family="Georgia">Caso de uso</text>
+      <text x="347" y="76" text-anchor="middle" fill="#365004" font-size="11" font-family="Segoe UI">y dominio</text>
+      <text x="347" y="96" text-anchor="middle" fill="#5c4634" font-size="10" font-family="Segoe UI">reglas del lote</text>
+      <rect x="454" y="48" width="100" height="52" rx="6" fill="#925e06"/>
+      <text x="504" y="72" text-anchor="middle" fill="#fffbf4" font-size="12" font-family="Segoe UI">PostgreSQL</text>
+      <text x="504" y="88" text-anchor="middle" fill="#fffbf4" font-size="10" font-family="Segoe UI">Supabase</text>
+      <rect x="272" y="132" width="150" height="28" rx="6" fill="#ede383"/>
+      <text x="347" y="150" text-anchor="middle" fill="#351903" font-size="11" font-family="Segoe UI">API de IA, solo coherencia</text>
+      <path d="M108 74 H140 M240 74 H272 M422 74 H454" stroke="#351903" stroke-width="1.5" marker-end="url(#flecha)"/>
+      <defs><marker id="flecha" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#351903"/></marker></defs>
+    </svg>
+  </div>
+  <p>La base es PostgreSQL, no MySQL. El backend usa el cliente <em>pg</em> y una cadena de conexión. No usa el cliente oficial de Supabase ni Supabase Auth. La sesión es un token JWT emitido por el propio backend, con la contraseña guardada como hash bcrypt. Angular no recibe claves de la base.</p>
+  <h3>Cadena de datos ya modelada</h3>
+  <p>Las tablas se encadenan así: usuario, productor, parcela, lote y análisis de coherencia. Una solicitud de registro vive aparte hasta que un administrador la aprueba y, en la misma transacción, crea la cuenta y la ficha.</p>
+  <div class="diagrama">
+    <svg viewBox="0 0 680 86" role="img" aria-label="Cadena de datos del PMV1">
+      <g font-family="Segoe UI" font-size="12" text-anchor="middle">
+        <rect x="8" y="22" width="100" height="40" rx="6" fill="#351903"/><text x="58" y="46" fill="#f7f0e3">Usuario</text>
+        <rect x="138" y="22" width="110" height="40" rx="6" fill="#365004"/><text x="193" y="46" fill="#f7f0e3">Productor</text>
+        <rect x="278" y="22" width="100" height="40" rx="6" fill="#365004"/><text x="328" y="46" fill="#f7f0e3">Parcela</text>
+        <rect x="408" y="22" width="90" height="40" rx="6" fill="#925e06"/><text x="453" y="46" fill="#fffbf4">Lote</text>
+        <rect x="528" y="22" width="144" height="40" rx="6" fill="#ede383"/><text x="600" y="46" fill="#351903">Coherencia</text>
+      </g>
+      <path d="M108 42 H138 M248 42 H278 M378 42 H408 M498 42 H528" stroke="#351903" stroke-width="1.4"/>
+    </svg>
+  </div>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Blockchain en el producto final</p>
+  <h1>Qué aportaría y qué no está hecho</h1>
+  <p>En el producto final, Blockchain no sustituye a PostgreSQL. La base sigue siendo el lugar donde se consulta el productor, la parcela y el lote. La cadena aportaría una copia verificable de hechos ya aceptados por el sistema, de modo que un tercero pueda comprobar si el registro que ve coincide con el que se publicó.</p>
+  <h2>Papel previsto</h2>
+  <ul>
+    <li><strong>Registro verificable.</strong> Un evento aceptado —por ejemplo, el alta de un lote— podría anclarse fuera de la base operativa.</li>
+    <li><strong>Integridad.</strong> Alterar después la fecha, el peso o el origen en la base no recompondría por sí solo el ancla publicada.</li>
+    <li><strong>Detección de modificaciones.</strong> La consulta compararía el dato guardado con el ancla. Una diferencia sería una señal de revisión, no una corrección silenciosa.</li>
+    <li><strong>Trazabilidad de operaciones.</strong> Los eventos posteriores al registro inicial, hoy ausentes, formarían el historial que el panel ya reserva y todavía deja vacío.</li>
+    <li><strong>Confianza.</strong> Productor y comprador podrían apoyarse en un registro que no depende solo de quien administra la base.</li>
+  </ul>
+  <h2>Arquitectura prevista frente a la actual</h2>
+  <p>La arquitectura hexagonal ya deja un lugar para ese paso. Un caso de uso futuro hablaría con un puerto de eventos y con un puerto de blockchain. Esos puertos se implementarían como adaptadores nuevos, sin reescribir el dominio del lote. La documentación del proyecto sitúa ese puerto en el PMV2. El PMV3, según la misma documentación, agrega validación de registros, QR, seguridad, rendimiento y usabilidad. Ninguno de esos componentes existe en el código actual.</p>
+  <div class="diagrama">
+    <svg viewBox="0 0 680 150" role="img" aria-label="Arquitectura prevista con blockchain">
+      <rect x="16" y="46" width="150" height="58" rx="6" fill="#365004"/>
+      <text x="91" y="70" text-anchor="middle" fill="#f7f3e6" font-size="12" font-family="Segoe UI">PMV1 en uso</text>
+      <text x="91" y="88" text-anchor="middle" fill="#ede383" font-size="10" font-family="Segoe UI">gestión y consulta</text>
+      <rect x="230" y="18" width="190" height="50" rx="6" fill="#f7f0e3" stroke="#925e06" stroke-dasharray="4 3"/>
+      <text x="325" y="40" text-anchor="middle" fill="#351903" font-size="12" font-family="Segoe UI">Puerto de eventos</text>
+      <text x="325" y="56" text-anchor="middle" fill="#925e06" font-size="10" font-family="Segoe UI">previsto · no implementado</text>
+      <rect x="230" y="82" width="190" height="50" rx="6" fill="#f7f0e3" stroke="#925e06" stroke-dasharray="4 3"/>
+      <text x="325" y="104" text-anchor="middle" fill="#351903" font-size="12" font-family="Segoe UI">Puerto de blockchain</text>
+      <text x="325" y="120" text-anchor="middle" fill="#925e06" font-size="10" font-family="Segoe UI">previsto · no implementado</text>
+      <rect x="484" y="46" width="176" height="58" rx="6" fill="#351903"/>
+      <text x="572" y="70" text-anchor="middle" fill="#f7f0e3" font-size="12" font-family="Segoe UI">Ancla verificable</text>
+      <text x="572" y="88" text-anchor="middle" fill="#ede383" font-size="10" font-family="Segoe UI">fuera de esta versión</text>
+      <path d="M166 75 H230 M420 43 H500 M420 107 H500" stroke="#925e06" stroke-width="1.4" stroke-dasharray="5 3"/>
+    </svg>
+  </div>
+  <p>En el repositorio hay, además, un notebook de laboratorio, <em>notebooks/PoC_RF_IA_01.ipynb</em>. Entrena clasificadores sobre una hoja de cálculo que no está en el proyecto y no es llamado por la aplicación. No es evidencia de Blockchain ni del funcionamiento de la plataforma.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Diferenciación</p>
+  <h1>Innovación</h1>
+  <p>La propuesta es innovadora para la cadena cafetalera de Chanchamayo porque no se queda en un formulario de cosecha ni en una promesa aislada de Blockchain. Ordena primero el origen —quién produce, en qué parcela y con qué lote— y reserva la integridad verificable para cuando existan eventos que merezcan anclarse. Esa secuencia evita publicar en una cadena datos que el propio sistema todavía no sabe relacionar.</p>
+  <p>La ingeniería ya visible está en la separación de capas, en las reglas de negocio del dominio y en el control de permisos. El dominio no depende de Express, de Angular ni de PostgreSQL. Las pruebas automáticas cubren esas reglas sin levantar la base. Cambiar el almacenamiento o, más adelante, añadir un adaptador de blockchain no obliga a reescribir la historia del lote.</p>
+  <h2>Del cuaderno al registro verificable</h2>
+  <table>
+    <thead>
+      <tr><th>Momento</th><th>Registro tradicional</th><th>Solución propuesta</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Origen</td><td>Nombre de la zona o de la finca, a menudo suelto.</td><td>Productor, parcela y lote ligados por identificadores.</td></tr>
+      <tr><td>Consulta</td><td>Hay que reunir papeles o preguntar a quien registró.</td><td>Una pantalla muestra la cadena del lote ya guardado.</td></tr>
+      <tr><td>Acceso</td><td>Quien tiene el archivo puede verlo o cambiarlo.</td><td>Rol de administrador o de productor, con solicitud previa de cuenta.</td></tr>
+      <tr><td>Integridad</td><td>Un cambio posterior no deja una prueba externa.</td><td>Previsto: ancla de blockchain para detectar la diferencia. Aún no construido.</td></tr>
+      <tr><td>Historial</td><td>Anotaciones sucesivas, si alguien las conserva.</td><td>Previsto: eventos de trazabilidad. El PMV1 deja ese espacio vacío a propósito.</td></tr>
+    </tbody>
+  </table>
+  <p>La columna de la derecha describe el producto hacia el que apunta el proyecto. Solo las tres primeras filas tienen una implementación actual, y aun esa implementación depende de que la base de datos esté disponible. La integridad anclada y el historial de eventos siguen siendo diseño.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Aspecto 3</p>
+  <h1>Impacto esperado</h1>
+  <p>Los efectos siguientes son consecuencias razonables de la solución si el producto final llega a usarse. No son resultados medidos. El repositorio no contiene estudios de adopción, precios, entrevistas ni indicadores ambientales.</p>
+  <div class="dos">
+    <article class="tarjeta">
+      <h3>Social</h3>
+      <p>Un origen consultable puede fortalecer la confianza entre quien cultiva y quien compra, porque la historia del lote deja de depender solo de una conversación.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Económico</h3>
+      <p>Poder mostrar procedencia, variedad y cantidad facilita la diferenciación comercial del café. El sistema no calcula ni promete un sobreprecio.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Tecnológico</h3>
+      <p>El PMV1 ya digitaliza la ficha de origen. El producto final sumaría Blockchain como mecanismo de integridad, no como un adorno de la marca.</p>
+    </article>
+    <article class="tarjeta">
+      <h3>Ambiental</h3>
+      <p>Guardar distrito, área, altitud y coordenadas permite documentar el contexto productivo. Eso no certifica una práctica sostenible.</p>
+    </article>
+  </div>
+  <h2>Alcance regional</h2>
+  <p>El catálogo de distritos y la identidad visual sitúan el registro en Chanchamayo. La aportación regional prevista es poner la trazabilidad del café amazónico de esa provincia en una herramienta propia, en lugar de un archivo genérico sin reglas de origen. Ese valor se realizará cuando los productores usen el sistema y, más adelante, cuando los registros puedan verificarse. Hoy es una dirección de diseño, no un impacto observado.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Hoja de ruta oficial</p>
+  <h1>Evolución del producto</h1>
+  <p>La planificación escrita en el repositorio reconoce tres incrementos. No hay un cuarto. La inteligencia de coherencia ya pertenece al PMV1. El puerto de blockchain está descrito para el PMV2, junto con los eventos de trazabilidad. El PMV3 refuerza la verificación hacia afuera, con QR y criterios de seguridad, rendimiento y usabilidad.</p>
+  <div class="diagrama">
+    <svg viewBox="0 0 680 210" role="img" aria-label="Tres incrementos del producto">
+      <rect x="16" y="24" width="200" height="160" rx="8" fill="#365004"/>
+      <text x="116" y="52" text-anchor="middle" fill="#ede383" font-size="12" font-family="Georgia">PMV1</text>
+      <text x="116" y="74" text-anchor="middle" fill="#fffbf4" font-size="13" font-family="Georgia">En el código</text>
+      <text x="116" y="104" text-anchor="middle" fill="#f7f0e3" font-size="11" font-family="Segoe UI">Productores, parcelas</text>
+      <text x="116" y="122" text-anchor="middle" fill="#f7f0e3" font-size="11" font-family="Segoe UI">y lotes consultables</text>
+      <text x="116" y="140" text-anchor="middle" fill="#f7f0e3" font-size="11" font-family="Segoe UI">Roles y solicitudes</text>
+      <text x="116" y="158" text-anchor="middle" fill="#ede383" font-size="11" font-family="Segoe UI">Coherencia del registro</text>
+      <rect x="240" y="24" width="200" height="160" rx="8" fill="#f7f0e3" stroke="#925e06"/>
+      <text x="340" y="52" text-anchor="middle" fill="#925e06" font-size="12" font-family="Georgia">PMV2</text>
+      <text x="340" y="74" text-anchor="middle" fill="#351903" font-size="13" font-family="Georgia">Previsto</text>
+      <text x="340" y="104" text-anchor="middle" fill="#351903" font-size="11" font-family="Segoe UI">Eventos de trazabilidad</text>
+      <text x="340" y="122" text-anchor="middle" fill="#351903" font-size="11" font-family="Segoe UI">Puerto de blockchain</text>
+      <text x="340" y="148" text-anchor="middle" fill="#5c4634" font-size="11" font-family="Segoe UI">El lote ya reserva</text>
+      <text x="340" y="166" text-anchor="middle" fill="#5c4634" font-size="11" font-family="Segoe UI">el estado REGISTRADO</text>
+      <rect x="464" y="24" width="200" height="160" rx="8" fill="#351903"/>
+      <text x="564" y="52" text-anchor="middle" fill="#ede383" font-size="12" font-family="Georgia">PMV3</text>
+      <text x="564" y="74" text-anchor="middle" fill="#fffbf4" font-size="13" font-family="Georgia">Previsto</text>
+      <text x="564" y="104" text-anchor="middle" fill="#f7f0e3" font-size="11" font-family="Segoe UI">Validación y QR</text>
+      <text x="564" y="122" text-anchor="middle" fill="#f7f0e3" font-size="11" font-family="Segoe UI">Seguridad y usabilidad</text>
+      <text x="564" y="148" text-anchor="middle" fill="#ede383" font-size="11" font-family="Segoe UI">Sobre los mismos</text>
+      <text x="564" y="166" text-anchor="middle" fill="#ede383" font-size="11" font-family="Segoe UI">puertos, no aparte</text>
+    </svg>
+  </div>
+  <p>Esta lectura sigue <em>docs/ARCHITECTURE.md</em> y <em>docs/PMV1.md</em>. No adelanta el ancla de blockchain al incremento actual ni presenta el indicador de coherencia como una certificación del café.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Aspecto 4</p>
+  <h1>Evidencias del funcionamiento</h1>
+  <p>El 29 de octubre de 2026 se levantaron la API en el puerto 3000 y la aplicación Angular en el puerto 4200. Se recorrió la interfaz pública y se ejecutó la suite automática del backend. La base configurada no aceptó la conexión: el inicio de sesión respondió que no pudo completar la operación y el servidor registró que el usuario de PostgreSQL del proyecto no fue encontrado. Por eso no hay capturas de los módulos que exigen sesión. Inventarlas habría falseado la evidencia.</p>
+  <h2>Pantalla de inicio de sesión</h2>
+  <figure>
+    <img src="informe-feria/capturas/01-login.png" alt="Pantalla de inicio de sesión de Chanchamayo Café Peruano" />
+    <figcaption>Figura 1. Acceso al sistema, capturado en ejecución local.</figcaption>
+  </figure>
+  <dl class="ficha">
+    <dt>Módulo</dt><dd>Inicio de sesión.</dd>
+    <dt>Función</dt><dd>Pedir correo y contraseña, u ofrecer el registro público.</dd>
+    <dt>Demuestra</dt><dd>La identidad visual y que la ruta de acceso carga en el navegador.</dd>
+    <dt>Estado</dt><dd><span class="estado-parcial">Interfaz comprobada.</span> El ingreso con la cuenta inicial no pudo completarse porque la base no respondió.</dd>
+  </dl>
+</section>
+
+<section class="pagina">
+  <h2>Solicitud pública de cuenta</h2>
+  <figure>
+    <img src="informe-feria/capturas/02-registro.png" alt="Formulario para solicitar una cuenta" />
+    <figcaption>Figura 2. Solicitud de cuenta. El texto de la pantalla indica que un administrador revisa los datos antes de habilitar el acceso.</figcaption>
+  </figure>
+  <dl class="ficha">
+    <dt>Módulo</dt><dd>Registro de usuarios, etapa pública.</dd>
+    <dt>Función</dt><dd>Recoger DNI o RUC, nombre, teléfono, organización, correo y contraseña.</dd>
+    <dt>Demuestra</dt><dd>Que una persona puede pedir acceso sin recibir sesión de inmediato.</dd>
+    <dt>Estado</dt><dd><span class="estado-parcial">Interfaz comprobada.</span> No se envió una solicitud en esta sesión, para no escribir datos de prueba sobre una base inalcanzable.</dd>
+  </dl>
+  <div class="aviso">No existe una pantalla llamada «gestión de usuarios». Las cuentas se administran desde solicitudes, desde el alta de una cuenta de productor y desde los botones de otorgar o retirar permisos de administrador en la ficha del productor. Esas pantallas están en el código y no pudieron fotografiarse.</div>
+</section>
+
+<section class="pagina">
+  <h2>Módulos implementados sin captura de esta sesión</h2>
+  <table>
+    <thead>
+      <tr><th>Módulo pedido</th><th>Qué hay en el sistema</th><th>Estado</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Panel principal</td>
+        <td>Cuenta productores, parcelas, lotes y kilogramos de lo que el usuario puede ver. La actividad reciente se muestra vacía por decisión del PMV1.</td>
+        <td><span class="estado-parcial">En código. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Productores</td>
+        <td>Listado, alta, edición, consulta, baja y búsqueda por nombre, documento u organización. Solo el administrador registra y elimina.</td>
+        <td><span class="estado-parcial">En código y en pruebas. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Parcelas</td>
+        <td>Alta ligada a un productor, con distrito de la provincia, área, altitud y coordenadas.</td>
+        <td><span class="estado-parcial">En código y en pruebas. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Lotes</td>
+        <td>Alta con código CHNY, consulta, edición y baja. El estado inicial es REGISTRADO.</td>
+        <td><span class="estado-parcial">En código y en pruebas. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Consulta de trazabilidad</td>
+        <td>Cadena visual productor, parcela, lote y registro de producción, más el último indicador de coherencia si existe. No hay eventos de cadena.</td>
+        <td><span class="estado-parcial">En código. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Permisos</td>
+        <td>Roles administrador y productor. Solicitudes de alta. Cuentas temporales. Otorgar o retirar administrador. Un productor no administra a otros.</td>
+        <td><span class="estado-parcial">En código y en pruebas. Sin captura.</span></td>
+      </tr>
+      <tr>
+        <td>Blockchain</td>
+        <td>No hay contrato, red, ancla ni verificación. El notebook del repositorio tampoco está conectado.</td>
+        <td><span class="estado-no">No implementado. No es evidencia.</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <h2>Pruebas automáticas ejecutadas</h2>
+  <p>En la misma fecha, <em>npm test</em> en el backend terminó con 17 pruebas aprobadas en 4 archivos: dominio, casos de uso, adaptador de consulta de documento y API. Esas pruebas usan repositorios en memoria y una respuesta fija de inteligencia artificial. Comprueban, entre otros comportamientos, el alta encadenada de cuenta, parcela y lote; el rechazo de un análisis con clasificación inválida; que una solicitud pendiente no inicia sesión; y que un productor no puede eliminar productores mientras un administrador sí puede, sin borrar los datos de otro.</p>
+  <p class="pie-seccion">Las pruebas no sustituyen una captura con datos reales de Supabase. Demuestran que la lógica del PMV1 se ejecuta sin la base. No demuestran Blockchain.</p>
+</section>
+
+<section class="pagina">
+  <p class="kicker" style="color:#925e06">Cierre</p>
+  <h1>Conclusiones</h1>
+  <ol>
+    <li>El problema que el proyecto asume es real en términos de ingeniería de la información: el origen del café de Chanchamayo se fragmenta y, una vez escrito, es difícil comprobar si sigue intacto.</li>
+    <li>Blockchain es pertinente como capa de integridad y de detección de cambios, después de que el lote tenga una identidad y un historial. No es el registro operativo.</li>
+    <li>La solución actual ya modela esa identidad: usuario, productor, parcela, lote y consulta, con permisos y con un indicador de coherencia que no certifica calidad.</li>
+    <li>La innovación defendible hoy es la arquitectura que deja listo el puerto futuro y las reglas de origen. La innovación del producto final será unir esa gestión con eventos verificables.</li>
+    <li>El impacto social, comercial, tecnológico, ambiental y regional es una hipótesis de uso. No hay mediciones en este informe.</li>
+    <li>Funcionan, como software comprobable, las pantallas públicas y la lógica cubierta por 17 pruebas. La sesión contra la base configurada no pudo demostrarse en esta ejecución.</li>
+    <li>El producto final llega por el PMV2, con eventos y puerto de blockchain, y por el PMV3, con validación, QR y refuerzo de uso. Presentar el PMV1 como si ya anclara lotes confundiría al jurado y al usuario.</li>
+  </ol>
+</section>
+
+</body>
+</html>

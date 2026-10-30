@@ -100,7 +100,6 @@ export class EliminarLote implements EliminarLoteUseCase {
     private readonly lotes: LoteRepositoryPort,
     private readonly parcelas: ParcelaRepositoryPort,
     private readonly productores: ProductorRepositoryPort,
-    private readonly analisis: AnalisisLoteRepositoryPort,
   ) {}
 
   async ejecutar(comando: { actor: Actor; loteId: string }): Promise<void> {
@@ -113,7 +112,6 @@ export class EliminarLote implements EliminarLoteUseCase {
       throw new NotFoundError('La parcela del lote no existe.');
     }
     await exigirAccesoAProductor(this.productores, comando.actor, parcela.productorId);
-    await this.analisis.eliminarPorLote(actual.id);
     await this.lotes.eliminar(actual.id);
   }
 }

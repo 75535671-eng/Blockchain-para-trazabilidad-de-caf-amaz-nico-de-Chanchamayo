@@ -21,7 +21,11 @@ export class AppComponent implements OnInit, OnDestroy {
     { ruta: '/solicitudes', texto: 'Solicitudes', icono: '✉' },
     { ruta: '/parcelas', texto: 'Parcelas', icono: '▣' },
     { ruta: '/lotes', texto: 'Lotes', icono: '▤' },
+    { ruta: '/eventos', texto: 'Eventos', icono: '◎' },
+    { ruta: '/historial', texto: 'Historial', icono: '↕' },
+    { ruta: '/reportes', texto: 'Reportes', icono: '☰' },
     { ruta: '/analisis', texto: 'Análisis IA', icono: '✧' },
+    { ruta: '/inteligencia', texto: 'Inteligencia', icono: '◈' },
   ];
 
   constructor(

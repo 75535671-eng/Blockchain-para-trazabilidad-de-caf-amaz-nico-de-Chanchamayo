@@ -1,0 +1,103 @@
+:host {
+  --moss: #173d2b;
+  --forest: #173d2b;
+  --forest-2: #527a50;
+  --gold: #c69a58;
+  --coffee: #c69a58;
+  --ink: #34251e;
+  --white: #faf9f5;
+  --cream: #e9dfc9;
+  --mint: #e9dfc9;
+  --btn: #173d2b;
+  --btn-text: #faf9f5;
+  --link: #173d2b;
+  --line: #d9cbb4;
+  --line-strong: #c69a58;
+  --soft: #f3ecdf;
+  display: block;
+}
+
+.traza-marca {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.traza-cabecera h1 {
+  color: var(--forest);
+}
+
+.traza-form,
+.traza-lista {
+  margin-top: 0.9rem;
+}
+
+.traza-form {
+  border-top: 4px solid var(--gold);
+}
+
+.traza-form h2,
+.traza-lista h2 {
+  margin-bottom: 0.8rem;
+}
+
+.campo-amplio {
+  grid-column: 1 / -1;
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: var(--input);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.traza-form .btn {
+  margin-top: 0.9rem;
+}
+
+.recorrido {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.recorrido li {
+  display: grid;
+  grid-template-columns: 7.2rem 1fr;
+  gap: 0.8rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cream) 55%, var(--white));
+  border-left: 3px solid var(--forest-2);
+}
+
+.recorrido .fecha {
+  color: var(--gold);
+  font-weight: 750;
+}
+
+.recorrido p {
+  margin: 0.25rem 0 0;
+}
+
+.variables {
+  color: var(--forest-2);
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .recorrido li {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
