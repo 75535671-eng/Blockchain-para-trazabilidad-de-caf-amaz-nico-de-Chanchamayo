@@ -63,8 +63,35 @@ export interface LoteRepositoryPort {
 
 export interface EventoTrazabilidadRepositoryPort {
   guardar(evento: EventoTrazabilidad): Promise<void>;
+  buscarPorId(id: string): Promise<EventoTrazabilidad | null>;
   listarPorLote(loteId: string): Promise<EventoTrazabilidad[]>;
   listarPorLotes(loteIds: string[]): Promise<EventoTrazabilidad[]>;
+}
+
+export interface ReferenciaAnclaje {
+  id: string;
+  eventoId: string;
+  hash: string;
+  red: string;
+  identificador: string;
+  fecha: Date;
+}
+
+export interface AnclajeEmitido {
+  red: string;
+  identificador: string;
+  fecha: Date;
+}
+
+export interface AnclajeIntegridadPort {
+  anclar(hash: string): Promise<AnclajeEmitido>;
+  verificar(hash: string, identificador: string): Promise<boolean>;
+}
+
+export interface ReferenciaAnclajeRepositoryPort {
+  guardar(referencia: ReferenciaAnclaje): Promise<void>;
+  buscarPorEvento(eventoId: string): Promise<ReferenciaAnclaje | null>;
+  listarPorEventos(eventoIds: string[]): Promise<ReferenciaAnclaje[]>;
 }
 
 export interface PrediccionCalidadRepositoryPort {
@@ -87,6 +114,27 @@ export type ResultadoPredictorCalidad =
 
 export interface PredictorCalidadPort {
   predecir(entrada: EntradaPrediccionCalidad): Promise<ResultadoPredictorCalidad>;
+}
+
+export interface EntradaPredictorTrazabilidad {
+  tieneBeneficio: number;
+  tieneTrilla: number;
+  tieneAlmacenamiento: number;
+  tieneTraslado: number;
+  ordenCronologico: number;
+  humedadAusente: number;
+  humedadPorcentaje: number;
+  diasEntreExtremos: number;
+}
+
+export interface ResultadoPredictorTrazabilidad {
+  resultado: string;
+  modelo: string;
+  referencia: string;
+}
+
+export interface PredictorTrazabilidadPort {
+  predecir(entrada: EntradaPredictorTrazabilidad): Promise<ResultadoPredictorTrazabilidad>;
 }
 
 export interface AnalisisLoteRepositoryPort {

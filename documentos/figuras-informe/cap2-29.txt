@@ -1,0 +1,1 @@
+Para evitar que los casos de uso dependan directamente de Supabase, se utilizará el patrón Repository.

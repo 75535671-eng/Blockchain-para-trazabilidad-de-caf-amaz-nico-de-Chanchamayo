@@ -76,6 +76,13 @@ export interface VariableBeneficio {
   humedadPorcentaje: number;
 }
 
+export interface AnclajeIntegridad {
+  hash: string;
+  red: string;
+  identificador: string;
+  fecha: string;
+}
+
 export interface EventoTrazabilidad {
   id: string;
   loteId: string;
@@ -84,6 +91,16 @@ export interface EventoTrazabilidad {
   descripcion: string;
   variables: VariableBeneficio | null;
   createdAt: string;
+  anclaje?: AnclajeIntegridad | null;
+}
+
+export interface VerificacionIntegridad {
+  eventoId: string;
+  estado: 'verificada' | 'fallida' | 'sin_anclaje';
+  mensaje: string;
+  hash: string | null;
+  red: string | null;
+  identificador: string | null;
 }
 
 export interface PrediccionCalidad {
@@ -126,6 +143,32 @@ export interface EvaluacionModelo {
   metricasHistoricas: MetricaHistorica[];
   decisionHistorica: string;
   limitaciones: string[];
+}
+
+export interface EvaluacionTrazabilidad extends EvaluacionModelo {
+  decisionIntegracion: string;
+}
+
+export interface EntradaTrazabilidad {
+  tieneBeneficio: number;
+  tieneTrilla: number;
+  tieneAlmacenamiento: number;
+  tieneTraslado: number;
+  ordenCronologico: number;
+  humedadAusente: number;
+  humedadPorcentaje: number;
+  diasEntreExtremos: number;
+}
+
+export interface IntentoTrazabilidad {
+  estado: 'datos_insuficientes' | 'disponible';
+  mensaje: string | null;
+  entrada: EntradaTrazabilidad | null;
+  estimacion: {
+    resultado: string;
+    modelo: string;
+    referencia: string;
+  } | null;
 }
 
 export interface ReporteLote {

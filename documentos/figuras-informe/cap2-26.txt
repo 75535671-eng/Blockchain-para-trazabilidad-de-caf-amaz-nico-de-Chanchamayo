@@ -1,0 +1,1 @@
+Debido a la necesidad de desacoplar la lógica de negocio de la persistencia, APIs externas e infraestructura, se adopta la Arquitectura Hexagonal, utilizando dominio, aplicación, puertos y adaptadores. Esta decisión permite mantener la solución preparada para su evolución durante los tres PMV.

@@ -1,0 +1,1 @@
+Figura A.2. Semilla 42, 200 registros y umbrales escritos antes del entrenamiento.

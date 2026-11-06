@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { PredictorCalidadNoIntegrado } from '../../src/adapters/out/prediccion/PredictorCalidadNoIntegrado';
+import { PredictorCalidadPrueba } from '../../src/adapters/out/prediccion/PredictorCalidadPrueba';
 import { hoyIso } from '../../src/application/support/apoyo';
 import { ListarEventos, RegistrarEvento } from '../../src/application/usecases/EventoUseCases';
 import { ConsultarEvaluacionModelo } from '../../src/application/usecases/ConsultarEvaluacionModelo';
@@ -11,6 +12,7 @@ import { RegistrarParcela } from '../../src/application/usecases/ParcelaUseCases
 import { PredecirCalidad } from '../../src/application/usecases/PredecirCalidad';
 import { RegistrarUsuario } from '../../src/application/usecases/RegistrarUsuario';
 import { PredictorCalidadPort } from '../../src/application/ports/output/OutputPorts';
+import { integridadDePrueba } from '../support/anclaje';
 import {
   HasherFijo,
   Memoria,
@@ -33,6 +35,7 @@ function sistema(predictor: PredictorCalidadPort = new PredictorCalidadNoIntegra
   const lotes = new MemoriaLotes(memoria);
   const eventos = new MemoriaEventos(memoria);
   const predicciones = new MemoriaPredicciones(memoria);
+  const integridad = integridadDePrueba(memoria);
   const hasher = new HasherFijo();
   const tokens = new TokensFijos();
   return {
@@ -41,8 +44,8 @@ function sistema(predictor: PredictorCalidadPort = new PredictorCalidadNoIntegra
     login: new IniciarSesion(usuarios, productores, new MemoriaSolicitudes(memoria), hasher, tokens),
     parcelas: new RegistrarParcela(parcelas, productores),
     lotes: new RegistrarLote(lotes, parcelas, productores),
-    eventos: new RegistrarEvento(eventos, lotes, parcelas, productores),
-    listarEventos: new ListarEventos(eventos, lotes, parcelas, productores),
+    eventos: new RegistrarEvento(eventos, lotes, parcelas, productores, integridad.anclar),
+    listarEventos: new ListarEventos(eventos, lotes, parcelas, productores, integridad.referencias),
     predecir: new PredecirCalidad(lotes, parcelas, productores, eventos, predicciones, predictor),
   };
 }
@@ -139,11 +142,44 @@ describe('HU-007, HU-010 y HU-011', () => {
   it('presenta la PoC como evaluación no concluyente y separada del adaptador de coherencia', async () => {
     const evaluacion = await new ConsultarEvaluacionModelo().ejecutar();
     expect(evaluacion.estado).toBe('NO_CONCLUYENTE');
-    expect(evaluacion.metricasHistoricas).toHaveLength(2);
+    expect(evaluacion.metricasHistoricas).toHaveLength(6);
+    expect(evaluacion.decisionHistorica).toBe('GO CON CONDICIONES');
+    expect(evaluacion.datasetDisponible).toBe(true);
     expect(JSON.stringify(evaluacion)).not.toMatch(/hash_blockchain/i);
     const predictor = readFileSync(join(__dirname, '../../src/adapters/out/prediccion/PredictorCalidadNoIntegrado.ts'), 'utf8');
     const caso = readFileSync(join(__dirname, '../../src/application/usecases/PredecirCalidad.ts'), 'utf8');
     expect(predictor).not.toMatch(/ExternalAIAdapter|AnalizarLote/);
     expect(caso).not.toMatch(/ExternalAIAdapter|AnalizarLote/);
+    const integrado = readFileSync(join(__dirname, '../../src/adapters/out/prediccion/PredictorCalidadPrueba.ts'), 'utf8');
+    expect(integrado).not.toMatch(/ExternalAIAdapter|AnalizarLote/);
+  });
+
+  it('devuelve categoría y puntaje con el modelo exportado de la prueba', async () => {
+    const predictor = new PredictorCalidadPrueba();
+    const alto = await predictor.predecir({
+      loteId: 'lote-prueba',
+      variedad: 'Typica',
+      altitudMsnm: 1600,
+      metodoBeneficio: 'Lavado',
+      humedadPorcentaje: 11,
+    });
+    expect(alto.estado).toBe('disponible');
+    if (alto.estado === 'disponible') {
+      expect(alto.calidad).toBe('Especial');
+      expect(alto.referencia).toContain('86.79');
+      expect(alto.modelo).toBe('Regresión logística de prueba');
+    }
+    const bajo = await predictor.predecir({
+      loteId: 'lote-prueba',
+      variedad: 'Pache',
+      altitudMsnm: 1000,
+      metodoBeneficio: 'Natural',
+      humedadPorcentaje: 12.5,
+    });
+    expect(bajo.estado).toBe('disponible');
+    if (bajo.estado === 'disponible') {
+      expect(bajo.calidad).toBe('Comercial');
+      expect(bajo.referencia).toContain('75.71');
+    }
   });
 });

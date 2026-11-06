@@ -2,12 +2,17 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { AuthController, EventoController, InteligenciaController, LoteController, ParcelaController, ProductorController, ReporteController, SolicitudController } from '../../src/adapters/in/controllers/Controllers';
 import { PredictorCalidadNoIntegrado } from '../../src/adapters/out/prediccion/PredictorCalidadNoIntegrado';
+import { PredictorTrazabilidadPrueba } from '../../src/adapters/out/prediccion/PredictorTrazabilidadPrueba';
 import { ExternalAIAdapter } from '../../src/adapters/out/ai/ExternalAIAdapter';
 import { createApp } from '../../src/infrastructure/http/app';
 import { AnalizarLote } from '../../src/application/usecases/AnalizarLote';
 import { CambiarContrasena, ConsultarSesion, IniciarSesion } from '../../src/application/usecases/IniciarSesion';
 import { ConsultarEvaluacionModelo } from '../../src/application/usecases/ConsultarEvaluacionModelo';
+import { ConsultarEvaluacionTrazabilidad } from '../../src/application/usecases/ConsultarEvaluacionTrazabilidad';
+import { EstimarTrazabilidad } from '../../src/application/usecases/EstimarTrazabilidad';
 import { ListarEventos, ListarEventosVisibles, RegistrarEvento } from '../../src/application/usecases/EventoUseCases';
+import { VerificarIntegridadEvento } from '../../src/application/usecases/IntegridadEvento';
+import { integridadDePrueba } from '../support/anclaje';
 import { GenerarReporteTrazabilidad } from '../../src/application/usecases/GenerarReporteTrazabilidad';
 import { ListarPredicciones, ListarPrediccionesVisibles, PredecirCalidad } from '../../src/application/usecases/PredecirCalidad';
 import { hoyIso } from '../../src/application/support/apoyo';
@@ -41,6 +46,7 @@ function appDePrueba() {
   const lotes = new MemoriaLotes(memoria);
   const analisis = new MemoriaAnalisis(memoria);
   const eventos = new MemoriaEventos(memoria);
+  const integridad = integridadDePrueba(memoria);
   const predicciones = new MemoriaPredicciones(memoria);
   const tokens = new TokensFijos();
   const hasher = new HasherFijo();
@@ -121,15 +127,18 @@ function appDePrueba() {
       new EliminarLote(lotes, parcelas, productores),
     ),
     eventos: new EventoController(
-      new RegistrarEvento(eventos, lotes, parcelas, productores),
-      new ListarEventos(eventos, lotes, parcelas, productores),
-      new ListarEventosVisibles(eventos, lotes, parcelas, productores),
+      new RegistrarEvento(eventos, lotes, parcelas, productores, integridad.anclar),
+      new ListarEventos(eventos, lotes, parcelas, productores, integridad.referencias),
+      new ListarEventosVisibles(eventos, lotes, parcelas, productores, integridad.referencias),
+      new VerificarIntegridadEvento(eventos, lotes, parcelas, productores, integridad.referencias, integridad.cadena),
     ),
     inteligencia: new InteligenciaController(
       new PredecirCalidad(lotes, parcelas, productores, eventos, predicciones, new PredictorCalidadNoIntegrado()),
       new ListarPredicciones(lotes, parcelas, productores, predicciones),
       new ListarPrediccionesVisibles(lotes, parcelas, productores, predicciones),
       new ConsultarEvaluacionModelo(),
+      new EstimarTrazabilidad(lotes, parcelas, productores, eventos, new PredictorTrazabilidadPrueba()),
+      new ConsultarEvaluacionTrazabilidad(),
     ),
     reportes: new ReporteController(new GenerarReporteTrazabilidad(lotes, parcelas, productores, eventos)),
   });
@@ -647,6 +656,9 @@ describe('API REST', () => {
     expect(creado.body.variables).toMatchObject({ metodoBeneficio: 'Lavado', humedadPorcentaje: 11.5 });
     expect(creado.body.variables.puntuacionCatacion).toBeUndefined();
     expect(JSON.stringify(creado.body)).not.toMatch(/puntuacion|catacion/i);
+    expect(creado.body.anclaje.hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(creado.body.anclaje.red).toBe('cadena-prueba');
+    expect(creado.body.anclaje.identificador).toMatch(/^[0-9a-f]{64}$/);
     const ajeno = await entrarComoProductor(app, {
       nombre: 'Rosa Quispe',
       email: 'ajena-eventos@example.com',
@@ -659,9 +671,24 @@ describe('API REST', () => {
       .set({ Authorization: `Bearer ${ajeno.token}` })
       .send({ etapa: 'TRASLADO', fecha: hoyIso(), descripcion: 'No corresponde a este productor.' });
     expect(prohibido.status).toBe(403);
+    const sinToken = await request(app).post(`/api/eventos/${creado.body.id}/verificacion`);
+    expect(sinToken.status).toBe(401);
+    const verificacion = await request(app).post(`/api/eventos/${creado.body.id}/verificacion`).set(auth);
+    expect(verificacion.status).toBe(200);
+    expect(verificacion.body).toMatchObject({
+      estado: 'verificada',
+      hash: creado.body.anclaje.hash,
+      red: 'cadena-prueba',
+      identificador: creado.body.anclaje.identificador,
+    });
+    const ajenoVerifica = await request(app)
+      .post(`/api/eventos/${creado.body.id}/verificacion`)
+      .set({ Authorization: `Bearer ${ajeno.token}` });
+    expect(ajenoVerifica.status).toBe(403);
     const lista = await request(app).get(`/api/lotes/${lote.body.id}/eventos`).set(auth);
     expect(lista.status).toBe(200);
     expect(lista.body).toHaveLength(1);
+    expect(lista.body[0].anclaje.hash).toBe(creado.body.anclaje.hash);
     const borrado = await request(app).delete(`/api/lotes/${lote.body.id}`).set(auth);
     expect(borrado.status).toBe(204);
     const trasBorrar = await request(app).get(`/api/lotes/${lote.body.id}/eventos`).set(auth);
@@ -685,9 +712,14 @@ describe('API REST', () => {
     expect(evaluacion.body.estado).toBe('NO_CONCLUYENTE');
     expect(JSON.stringify(evaluacion.body)).not.toMatch(/hash_blockchain/i);
     expect(evaluacion.body.metricasHistoricas.map((item: { nombre: string }) => item.nombre)).toEqual([
-      'Accuracy calidad_tipo',
-      'F1 macro calidad_tipo',
+      'Accuracy regresión logística',
+      'F1 macro regresión logística',
+      'Accuracy Random Forest',
+      'F1 macro Random Forest',
+      'Accuracy Gradient Boosting',
+      'F1 macro Gradient Boosting',
     ]);
+    expect(evaluacion.body.decisionHistorica).toBe('GO CON CONDICIONES');
     const parcela = await request(app).post('/api/parcelas').set(auth).send({
       productorId: sesion.productorId,
       nombre: 'Parcela Reporte',
@@ -704,11 +736,20 @@ describe('API REST', () => {
     expect(sinDatos.status).toBe(200);
     expect(sinDatos.body.estado).toBe('datos_insuficientes');
     expect(sinDatos.body.prediccion).toBeNull();
+    const sinEventos = await request(app).post(`/api/lotes/${lote.body.id}/trazabilidad/estimacion`).set(auth).send({});
+    expect(sinEventos.status).toBe(200);
+    expect(sinEventos.body.estado).toBe('datos_insuficientes');
+    expect(sinEventos.body.estimacion).toBeNull();
     await request(app).post(`/api/lotes/${lote.body.id}/eventos`).set(auth).send({
       etapa: 'TRASLADO',
       fecha: hoyIso(),
       descripcion: 'Traslado al almacén de la cooperativa.',
     });
+    const estimacion = await request(app).post(`/api/lotes/${lote.body.id}/trazabilidad/estimacion`).set(auth).send({});
+    expect(estimacion.status).toBe(200);
+    expect(estimacion.body.estado).toBe('disponible');
+    expect(estimacion.body.estimacion.modelo).toBe('Regresión logística de prueba');
+    expect(['Completa', 'Incompleta']).toContain(estimacion.body.estimacion.resultado);
     const reporte = await request(app).get('/api/reportes/trazabilidad').set(auth);
     expect(reporte.status).toBe(200);
     expect(reporte.body.disponible).toBe(true);

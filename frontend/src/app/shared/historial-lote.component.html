@@ -15,7 +15,36 @@
           <span class="cuando">{{ evento.fecha }}</span>
           <strong>{{ etiquetaEtapa(evento.etapa) }}</strong>
           <span class="resumen">{{ evento.descripcion }}</span>
+          <span class="estado" [class.anclado]="evento.anclaje" [class.pendiente]="!evento.anclaje">
+            {{ evento.anclaje ? 'Anclado' : 'Sin anclaje' }}
+          </span>
         </button>
+        <div class="verificacion">
+          <button
+            type="button"
+            class="btn secundario verificar"
+            (click)="verificar(evento)"
+            [disabled]="verificandoId === evento.id"
+          >
+            {{ verificandoId === evento.id ? 'Verificando…' : 'Verificar' }}
+          </button>
+          @if (resultadoDe(evento.id); as verificacion) {
+            <p
+              class="alerta"
+              [class.ok]="verificacion.estado === 'verificada'"
+              [class.error]="verificacion.estado === 'fallida'"
+            >
+              {{ verificacion.mensaje }}
+            </p>
+            @if (verificacion.estado === 'verificada') {
+              <div class="prueba">
+                <span>Hash: {{ verificacion.hash }}</span>
+                <span>Red: {{ verificacion.red }}</span>
+                <span>Identificador: {{ verificacion.identificador }}</span>
+              </div>
+            }
+          }
+        </div>
       </li>
     }
   </ol>

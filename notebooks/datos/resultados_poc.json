@@ -1,0 +1,72 @@
+{
+  "identificador": "PoC RF-IA-01",
+  "semilla": 42,
+  "registros": 200,
+  "entrenamiento": 150,
+  "prueba": 50,
+  "conteo_clases": {
+    "Comercial": 78,
+    "Premium": 72,
+    "Especial": 50
+  },
+  "clasificacion": [
+    {
+      "modelo": "Regresión logística",
+      "accuracy": 0.8,
+      "f1_macro": 0.7857,
+      "inferencia_ms": 2.59,
+      "decision_experimental": "GO"
+    },
+    {
+      "modelo": "Random Forest",
+      "accuracy": 0.66,
+      "f1_macro": 0.6257,
+      "inferencia_ms": 13.132,
+      "decision_experimental": "GO CON CONDICIONES"
+    },
+    {
+      "modelo": "Gradient Boosting",
+      "accuracy": 0.64,
+      "f1_macro": 0.6181,
+      "inferencia_ms": 2.742,
+      "decision_experimental": "GO CON CONDICIONES"
+    }
+  ],
+  "regresion": [
+    {
+      "modelo": "Regresión lineal",
+      "mae": 1.8213,
+      "rmse": 2.2567,
+      "r2": 0.7621,
+      "inferencia_ms": 2.072
+    },
+    {
+      "modelo": "Random Forest",
+      "mae": 2.0983,
+      "rmse": 2.518,
+      "r2": 0.7038,
+      "inferencia_ms": 13.278
+    },
+    {
+      "modelo": "Gradient Boosting",
+      "mae": 2.1502,
+      "rmse": 2.6101,
+      "r2": 0.6817,
+      "inferencia_ms": 2.771
+    }
+  ],
+  "mejor_clasificador": {
+    "modelo": "Regresión logística",
+    "accuracy": 0.8,
+    "f1_macro": 0.7857,
+    "inferencia_ms": 2.59,
+    "decision_experimental": "GO"
+  },
+  "decision_experimental": "GO",
+  "decision_integracion": "GO CON CONDICIONES",
+  "versiones": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1"
+  }
+}

@@ -12,15 +12,21 @@ import {
   PostgresSolicitudRegistroRepository,
   PostgresUsuarioRepository,
 } from '../../adapters/out/persistence/PostgresRepositories';
+import { CadenaPruebaAnclaje } from '../../adapters/out/anclaje/CadenaPruebaAnclaje';
 import { PostgresEventoTrazabilidadRepository } from '../../adapters/out/persistence/PostgresEventoRepository';
+import { PostgresReferenciaAnclajeRepository } from '../../adapters/out/persistence/PostgresReferenciaAnclajeRepository';
 import { PostgresPrediccionCalidadRepository } from '../../adapters/out/persistence/PostgresPrediccionRepository';
-import { PredictorCalidadNoIntegrado } from '../../adapters/out/prediccion/PredictorCalidadNoIntegrado';
+import { PredictorCalidadPrueba } from '../../adapters/out/prediccion/PredictorCalidadPrueba';
+import { PredictorTrazabilidadPrueba } from '../../adapters/out/prediccion/PredictorTrazabilidadPrueba';
 import { BcryptPasswordHasher, JwtTokenProvider } from '../../adapters/out/security/SecurityAdapters';
 import { ActualizarProductor, ConsultarDniProductor, EliminarProductor, ListarProductores, OtorgarAdministrador, QuitarAdministrador, RegistrarProductor } from '../../application/usecases/ProductorUseCases';
 import { AnalizarLote } from '../../application/usecases/AnalizarLote';
 import { CambiarContrasena, ConsultarSesion, IniciarSesion } from '../../application/usecases/IniciarSesion';
 import { ConsultarEvaluacionModelo } from '../../application/usecases/ConsultarEvaluacionModelo';
+import { ConsultarEvaluacionTrazabilidad } from '../../application/usecases/ConsultarEvaluacionTrazabilidad';
+import { EstimarTrazabilidad } from '../../application/usecases/EstimarTrazabilidad';
 import { ListarEventos, ListarEventosVisibles, RegistrarEvento } from '../../application/usecases/EventoUseCases';
+import { AnclarIntegridadEvento, VerificarIntegridadEvento } from '../../application/usecases/IntegridadEvento';
 import { GenerarReporteTrazabilidad } from '../../application/usecases/GenerarReporteTrazabilidad';
 import { ListarPredicciones, ListarPrediccionesVisibles, PredecirCalidad } from '../../application/usecases/PredecirCalidad';
 import { ActualizarLote, ConsultarLote, EliminarLote, ListarLotes, RegistrarLote } from '../../application/usecases/LoteUseCases';
@@ -80,8 +86,10 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
   const lotes = new PostgresLoteRepository(pool);
   const analisis = new PostgresAnalisisLoteRepository(pool);
   const eventos = new PostgresEventoTrazabilidadRepository(pool);
+  const referencias = new PostgresReferenciaAnclajeRepository(pool);
+  const cadena = CadenaPruebaAnclaje.conReferencias(pool);
   const predicciones = new PostgresPrediccionCalidadRepository(pool);
-  const predictor = new PredictorCalidadNoIntegrado();
+  const predictor = new PredictorCalidadPrueba();
   const solicitudes = new PostgresSolicitudRegistroRepository(pool);
   const hasher = new BcryptPasswordHasher();
   const tokens = new JwtTokenProvider(config.jwtSecret, config.jwtExpiresIn);
@@ -136,15 +144,18 @@ export function createProductionContainer(config = leerConfig()): AppContainer {
       new EliminarLote(lotes, parcelas, productores),
     ),
     eventos: new EventoController(
-      new RegistrarEvento(eventos, lotes, parcelas, productores),
-      new ListarEventos(eventos, lotes, parcelas, productores),
-      new ListarEventosVisibles(eventos, lotes, parcelas, productores),
+      new RegistrarEvento(eventos, lotes, parcelas, productores, new AnclarIntegridadEvento(cadena, referencias)),
+      new ListarEventos(eventos, lotes, parcelas, productores, referencias),
+      new ListarEventosVisibles(eventos, lotes, parcelas, productores, referencias),
+      new VerificarIntegridadEvento(eventos, lotes, parcelas, productores, referencias, cadena),
     ),
     inteligencia: new InteligenciaController(
       new PredecirCalidad(lotes, parcelas, productores, eventos, predicciones, predictor),
       new ListarPredicciones(lotes, parcelas, productores, predicciones),
       new ListarPrediccionesVisibles(lotes, parcelas, productores, predicciones),
       new ConsultarEvaluacionModelo(),
+      new EstimarTrazabilidad(lotes, parcelas, productores, eventos, new PredictorTrazabilidadPrueba()),
+      new ConsultarEvaluacionTrazabilidad(),
     ),
     reportes: new ReporteController(new GenerarReporteTrazabilidad(lotes, parcelas, productores, eventos)),
   };

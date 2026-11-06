@@ -1,0 +1,26 @@
+[1] ICACIT. Criterios de Acreditación ICACIT para Programas de Pregrado y Glosario de Términos 2026 [en línea]. Lima: ICACIT, 2026. [consulta: 25 septiembre 2026]. Disponible en: ICACIT – Criterios de acreditación
+[2] MUNICIPALIDAD PROVINCIAL DE CHANCHAMAYO. Diagnóstico de la caficultura de la provincia de Chanchamayo [en línea]. La Merced: Municipalidad Provincial de Chanchamayo, 2022. [consulta: 25 septiembre 2026]. Disponible en: Diagnóstico de la Caficultura de Chanchamayo
+[3] AGROBANCO. Agrobanco beneficia con S/4.4 millones a ocho asociaciones de pequeños productores de Pichanaqui [en línea]. Lima: Banco Agropecuario, 31 mayo 2024. [consulta: 25 septiembre 2026]. Disponible en: Agrobanco – nota institucional
+[4] AGROMERCADO. Midagri: Rueda de Negocios en Junín genera compromisos comerciales por más de S/17.4 millones [en línea]. Lima: Ministerio de Desarrollo Agrario y Riego, 30 noviembre 2024. [consulta: 25 septiembre 2026]. Disponible en: Agromercado – rueda de negocios Junín
+[5] ESLAVA NUÑEZ, Edwin Enrique; MEDINA MEJIA, Fabricio Noe; MAITA PEREZ, Percy Aldo. Análisis del uso de la tecnología blockchain para mejorar la gestión sostenible de la cadena de suministro del café de especialidad peruano [en línea]. Tesis de maestría. Lima: Universidad ESAN, 2025. [consulta: 25 septiembre 2026]. Disponible en: Repositorio de la Universidad ESAN
+[6] ALAMSYAH, Andry; WIDIYANESTI, Sri; WULANSARI, Puspita; NURHAZIZAH, Eva; DEWI, Andrieta Shintia; RAHADIAN, Dadan; RAMADHANI, Dian Puteri; HAKIM, Muhammad Naufal; TYASAMESI, Prenzeline. Blockchain traceability model in the coffee industry. Journal of Open Innovation: Technology, Market, and Complexity [en línea]. 2023, vol. 9, n.º 1, artículo 100008. DOI: 10.1016/j.joitmc.2023.100008. [consulta: 25 septiembre 2026]. Disponible en: ScienceDirect – artículo científico
+[7] BETTÍN-DÍAZ, Rafael; ROJAS, Alix E.; MEJÍA-MONCAYO, Camilo. Colombian Origin Coffee Supply Chain Traceability by a Blockchain Implementation. Operations Research Forum [en línea]. 2022, vol. 3, artículo 64. DOI: 10.1007/s43069-022-00174-4. [consulta: 25 septiembre 2026]. Disponible en: Springer Nature – artículo científico
+[8] PANG, Shaoning; TENG, Shyh Wei; MURSHED, Manzur; BUI, Cuong Van; KARMAKAR, Priyabrata; LI, Yanyu; LIN, Hao. A survey on evaluation of blockchain-based agricultural traceability. Computers and Electronics in Agriculture [en línea]. 2024, vol. 227, artículo 109548. DOI: 10.1016/j.compag.2024.109548. [consulta: 25 septiembre 2026]. Disponible en: ScienceDirect – artículo científico
+[9] GÓMEZ, Christian; GARBINATO, Benoît. Blockchain technology to improve traceability in the coffee supply chain: A systematic literature review. International Journal of Information Management Data Insights [en línea]. 2025, vol. 5, n.º 2, artículo 100359. DOI: 10.1016/j.jjimei.2025.100359. [consulta: 25 septiembre 2026]. Disponible en: ScienceDirect – revisión sistemática
+[10] GÓMEZ, Christian y Benoît GARBINATO. Blockchain technology to improve traceability in the coffee supply chain: A systematic literature review. International Journal of Information Management Data Insights [en línea]. 2025, vol. 5, n.º 2, 100359. DOI: 10.1016/j.jjimei.2025.100359.
+ ScienceDirect – artículo completo
+[11] AHMED, Wafaa A. H. y Bart L. MACCARTHY. Blockchain-enabled supply chain traceability – How wide? How deep? International Journal of Production Economics [en línea]. 2023, vol. 263, 108963. DOI: 10.1016/j.ijpe.2023.108963.
+ ScienceDirect – artículo completo
+[12] EL HAJJI, Mohamed, Youssef ES-SAADY, Mustapha AIT ADDI y Jilali ANTARI. Optimization of agrifood supply chains using Hyperledger Fabric blockchain technology. Computers and Electronics in Agriculture [en línea]. 2024, vol. 227, 109503. DOI: 10.1016/j.compag.2024.109503.
+ ScienceDirect – artículo completo
+[13] GUAN, Wei, Wenhong DING, Bobo ZHANG, Jerome VERNY y Rubin HAO. Do supply chain related factors enhance the prediction accuracy of blockchain adoption? A machine learning approach. Technological Forecasting and Social Change [en línea]. 2023, vol. 192, 122552. DOI: 10.1016/j.techfore.2023.122552.
+ ScienceDirect – artículo completo
+[14] PATIL, Kiran, Divesh OJHA, Elisabeth M. STRUCKELL y Pankaj C. PATEL. Behavioral drivers of blockchain assimilation in supply chains – A social network theory perspective. Technological Forecasting and Social Change [en línea]. 2023, vol. 192, 122578. DOI: 10.1016/j.techfore.2023.122578.
+ ScienceDirect – artículo completo
+[15] ALAMSYAH et al. Blockchain traceability model in the coffee industry. Journal of Open Innovation: Technology, Market, and Complexity [en línea]. 2023, vol. 9, n.º 1, 100008. DOI: 10.1016/j.joitmc.2023.100008.
+ ScienceDirect – artículo completo
+[16] FIORE, Marco y Marina MONGIELLO. Blockchain Technology to Support Agri-Food Supply Chains: A Comprehensive Review. IEEE Access [en línea]. 2023, vol. 11, pp. 75311–75324. DOI: 10.1109/ACCESS.2023.3296849.
+ IEEE Xplore – artículo completo
+[17] ESLAVA NUÑEZ, Edwin Enrique, Fabricio Noe MEDINA MEJIA y Percy Aldo MAITA PEREZ. Análisis del uso de la tecnología blockchain para mejorar la gestión sostenible de la cadena de suministro del café de especialidad peruano [en línea]. Tesis de maestría. Lima: Universidad ESAN, 2025.
+ ALICIA – CONCYTEC / Registro de la tesis
+Matriz de alineamiento con ICACIT

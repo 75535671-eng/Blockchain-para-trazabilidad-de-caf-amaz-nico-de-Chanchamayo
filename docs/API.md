@@ -84,7 +84,10 @@ El análisis devuelve la consulta del lote con `ultimoAnalisis`: estrategia, cla
 
 Las etapas son `BENEFICIO`, `TRILLA`, `ALMACENAMIENTO`, `TRASLADO` y `EXPORTACION`. El método es `Lavado`, `Honey` o `Natural`. La humedad va de 0 a 100, con hasta dos decimales. En las etapas distintas de beneficio no se envían variables. La fecha no puede ser anterior a la cosecha ni futura. Una puntuación de catación enviada en el cuerpo se ignora y no se guarda.
 
+Al registrar, la API calcula el SHA-256 del contenido canónico: lote, etapa, fecha, descripción y, si es beneficio, método y humedad. Ancla ese hash y la respuesta incluye `anclaje` con `hash`, `red`, `identificador` y `fecha`. El evento operativo sigue en PostgreSQL. El hash no incluye el documento ni otros datos del productor. `GET /api/lotes/:id/eventos` devuelve `anclaje` en null cuando el evento todavía no está anclado.
+
 - `GET /api/eventos` — eventos visibles para el usuario, ordenados por fecha. El productor solo ve los de sus lotes.
+- `POST /api/eventos/:id/verificacion` — recalcula el hash del evento que el usuario puede ver. Sin anclaje, `estado` es `sin_anclaje`. Si el contenido cambió, `estado` es `fallida`. Si coincide con el anclaje, `estado` es `verificada` y la respuesta trae `hash`, `red` e `identificador`. Un productor no verifica el lote de otro.
 
 ### Predicción de calidad
 

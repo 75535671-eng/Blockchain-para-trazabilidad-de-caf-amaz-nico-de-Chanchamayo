@@ -7,9 +7,12 @@ import {
   LoteRepositoryPort,
   ParcelaRepositoryPort,
   ProductorRepositoryPort,
+  ReferenciaAnclaje,
+  ReferenciaAnclajeRepositoryPort,
 } from '../ports/output/OutputPorts';
 import { hoyIso, nuevoId } from '../support/apoyo';
 import { lotesVisibles } from '../support/lotesVisibles';
+import { AnclarIntegridadEvento } from './IntegridadEvento';
 
 export class RegistrarEvento implements RegistrarEventoUseCase {
   constructor(
@@ -17,6 +20,7 @@ export class RegistrarEvento implements RegistrarEventoUseCase {
     private readonly lotes: LoteRepositoryPort,
     private readonly parcelas: ParcelaRepositoryPort,
     private readonly productores: ProductorRepositoryPort,
+    private readonly anclarIntegridad: AnclarIntegridadEvento,
   ) {}
 
   async ejecutar(comando: {
@@ -57,7 +61,8 @@ export class RegistrarEvento implements RegistrarEventoUseCase {
           : null,
     });
     await this.eventos.guardar(evento);
-    return aEventoDto(evento);
+    const referencia = await this.anclarIntegridad.ejecutar(evento);
+    return aEventoDto(evento, referencia);
   }
 }
 
@@ -67,6 +72,7 @@ export class ListarEventos implements ListarEventosUseCase {
     private readonly lotes: LoteRepositoryPort,
     private readonly parcelas: ParcelaRepositoryPort,
     private readonly productores: ProductorRepositoryPort,
+    private readonly referencias: ReferenciaAnclajeRepositoryPort,
   ) {}
 
   async ejecutar(comando: { actor: Actor; loteId: string }): Promise<EventoTrazabilidadDto[]> {
@@ -80,7 +86,7 @@ export class ListarEventos implements ListarEventosUseCase {
     }
     await exigirAccesoAlLote(this.productores, comando.actor, parcela.productorId);
     const eventos = await this.eventos.listarPorLote(lote.id);
-    return eventos.map(aEventoDto);
+    return eventosConAnclaje(eventos, this.referencias);
   }
 }
 
@@ -104,17 +110,27 @@ export class ListarEventosVisibles implements ListarEventosVisiblesUseCase {
     private readonly lotes: LoteRepositoryPort,
     private readonly parcelas: ParcelaRepositoryPort,
     private readonly productores: ProductorRepositoryPort,
+    private readonly referencias: ReferenciaAnclajeRepositoryPort,
   ) {}
 
   async ejecutar(actor: Actor): Promise<EventoTrazabilidadDto[]> {
     const lotes = await lotesVisibles(this.lotes, this.parcelas, this.productores, actor);
     const eventos = await this.eventos.listarPorLotes(lotes.map((lote) => lote.id));
-    return eventos.map(aEventoDto);
+    return eventosConAnclaje(eventos, this.referencias);
   }
 }
 
-export function aEventoDto(evento: EventoTrazabilidad): EventoTrazabilidadDto {
-  return {
+async function eventosConAnclaje(
+  eventos: EventoTrazabilidad[],
+  referencias: ReferenciaAnclajeRepositoryPort,
+): Promise<EventoTrazabilidadDto[]> {
+  const anclajes = await referencias.listarPorEventos(eventos.map((evento) => evento.id));
+  const porEvento = new Map(anclajes.map((anclaje) => [anclaje.eventoId, anclaje]));
+  return eventos.map((evento) => aEventoDto(evento, porEvento.get(evento.id) ?? null));
+}
+
+export function aEventoDto(evento: EventoTrazabilidad, anclaje?: ReferenciaAnclaje | null): EventoTrazabilidadDto {
+  const dto: EventoTrazabilidadDto = {
     id: evento.id,
     loteId: evento.loteId,
     etapa: evento.etapa,
@@ -129,4 +145,15 @@ export function aEventoDto(evento: EventoTrazabilidad): EventoTrazabilidadDto {
       : null,
     createdAt: evento.createdAt.toISOString(),
   };
+  if (anclaje !== undefined) {
+    dto.anclaje = anclaje
+      ? {
+          hash: anclaje.hash,
+          red: anclaje.red,
+          identificador: anclaje.identificador,
+          fecha: anclaje.fecha.toISOString(),
+        }
+      : null;
+  }
+  return dto;
 }

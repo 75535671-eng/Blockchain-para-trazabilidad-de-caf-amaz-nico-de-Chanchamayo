@@ -63,10 +63,13 @@ export function createApp(container: AppContainer): Express {
   app.post('/api/lotes/:id/eventos', requiereAuth, asyncHandler(container.eventos.crear));
   app.get('/api/lotes/:id/eventos', requiereAuth, asyncHandler(container.eventos.listarDelLote));
   app.get('/api/eventos', requiereAuth, asyncHandler(container.eventos.listarTodos));
+  app.post('/api/eventos/:id/verificacion', requiereAuth, asyncHandler(container.eventos.verificar));
   app.post('/api/lotes/:id/prediccion', requiereAuth, asyncHandler(container.inteligencia.predecirUno));
+  app.post('/api/lotes/:id/trazabilidad/estimacion', requiereAuth, asyncHandler(container.inteligencia.estimarTrazabilidad));
   app.get('/api/lotes/:id/predicciones', requiereAuth, asyncHandler(container.inteligencia.listarDelLote));
   app.get('/api/predicciones', requiereAuth, asyncHandler(container.inteligencia.listarTodas));
   app.get('/api/modelo/evaluacion', requiereAuth, asyncHandler(container.inteligencia.evaluacion));
+  app.get('/api/modelo/evaluacion-trazabilidad', requiereAuth, asyncHandler(container.inteligencia.evaluacionTrazabilidad));
   app.get('/api/reportes/trazabilidad', requiereAuth, asyncHandler(container.reportes.consultar));
   app.put('/api/lotes/:id', requiereAuth, asyncHandler(container.lotes.actualizarUno));
   app.delete('/api/lotes/:id', requiereAuth, asyncHandler(container.lotes.eliminarUno));

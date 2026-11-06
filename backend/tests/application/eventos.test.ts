@@ -8,6 +8,7 @@ import { RegistrarUsuario } from '../../src/application/usecases/RegistrarUsuari
 import { AnalisisLote } from '../../src/domain/entities/AnalisisLote';
 import { Usuario } from '../../src/domain/entities/Usuario';
 import { IniciarSesion } from '../../src/application/usecases/IniciarSesion';
+import { integridadDePrueba } from '../support/anclaje';
 import {
   HasherFijo,
   Memoria,
@@ -28,6 +29,7 @@ function sistema() {
   const parcelas = new MemoriaParcelas(memoria);
   const lotes = new MemoriaLotes(memoria);
   const eventos = new MemoriaEventos(memoria);
+  const integridad = integridadDePrueba(memoria);
   const hasher = new HasherFijo();
   const tokens = new TokensFijos();
   return {
@@ -36,8 +38,8 @@ function sistema() {
     login: new IniciarSesion(usuarios, productores, new MemoriaSolicitudes(memoria), hasher, tokens),
     parcelas: new RegistrarParcela(parcelas, productores),
     lotes: new RegistrarLote(lotes, parcelas, productores),
-    eventos: new RegistrarEvento(eventos, lotes, parcelas, productores),
-    listarEventos: new ListarEventos(eventos, lotes, parcelas, productores),
+    eventos: new RegistrarEvento(eventos, lotes, parcelas, productores, integridad.anclar),
+    listarEventos: new ListarEventos(eventos, lotes, parcelas, productores, integridad.referencias),
     eliminarLote: new EliminarLote(lotes, parcelas, productores),
     eliminarProductor: new EliminarProductor(productores),
   };
@@ -70,7 +72,7 @@ async function loteDe(app: ReturnType<typeof sistema>, nombre: string, email: st
   return { actor, lote, productorId: sesion.productorId ?? '' };
 }
 
-describe('HU-008 y HU-009', () => {
+describe('registro de eventos de trazabilidad', () => {
   it('guarda el beneficio y sus variables juntos y permite consultarlos', async () => {
     const app = sistema();
     const { actor, lote } = await loteDe(app, 'Ana Quispe', 'ana-evento@example.com', '12345678');
@@ -188,13 +190,14 @@ describe('HU-008 y HU-009', () => {
     const parcelas = new MemoriaParcelas(memoria);
     const lotes = new MemoriaLotes(memoria);
     const eventos = new MemoriaEventos(memoria);
+    const integridad = integridadDePrueba(memoria);
     const hasher = new HasherFijo();
     const tokens = new TokensFijos();
     const registrar = new RegistrarUsuario(usuarios, productores, new MemoriaRegistro(memoria), hasher);
     const login = new IniciarSesion(usuarios, productores, new MemoriaSolicitudes(memoria), hasher, tokens);
     const registrarParcela = new RegistrarParcela(parcelas, productores);
     const registrarLote = new RegistrarLote(lotes, parcelas, productores);
-    const registrarEvento = new RegistrarEvento(eventos, lotes, parcelas, productores);
+    const registrarEvento = new RegistrarEvento(eventos, lotes, parcelas, productores, integridad.anclar);
     const ana = await registrar.ejecutar({
       nombre: 'Ana Quispe',
       email: 'ana-prod@example.com',

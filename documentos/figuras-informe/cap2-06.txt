@@ -1,0 +1,1 @@
+HU-006: Como usuario necesito analizar la coherencia de los datos registrados de un lote mediante Inteligencia Artificial para identificar posibles inconsistencias y obtener una lectura preliminar del registro.

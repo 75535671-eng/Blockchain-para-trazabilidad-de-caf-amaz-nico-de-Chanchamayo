@@ -4,8 +4,11 @@ import { environment } from '../../environments/environment';
 import {
   ConsultaLote,
   EvaluacionModelo,
+  EvaluacionTrazabilidad,
   EventoTrazabilidad,
   IntentoPrediccion,
+  VerificacionIntegridad,
+  IntentoTrazabilidad,
   Lote,
   Parcela,
   PrediccionCalidad,
@@ -187,8 +190,20 @@ export class ApiService {
     return this.http.get<EvaluacionModelo>(`${environment.apiUrl}/modelo/evaluacion`);
   }
 
+  consultarEvaluacionTrazabilidad() {
+    return this.http.get<EvaluacionTrazabilidad>(`${environment.apiUrl}/modelo/evaluacion-trazabilidad`);
+  }
+
+  estimarTrazabilidad(loteId: string) {
+    return this.http.post<IntentoTrazabilidad>(`${environment.apiUrl}/lotes/${loteId}/trazabilidad/estimacion`, {});
+  }
+
   consultarReporte(filtros: Record<string, string>) {
     return this.http.get<ReporteTrazabilidad>(`${environment.apiUrl}/reportes/trazabilidad`, { params: filtros });
+  }
+
+  verificarEvento(eventoId: string) {
+    return this.http.post<VerificacionIntegridad>(`${environment.apiUrl}/eventos/${eventoId}/verificacion`, {});
   }
 
   registrarEvento(

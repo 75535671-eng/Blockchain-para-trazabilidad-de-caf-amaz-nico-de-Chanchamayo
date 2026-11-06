@@ -10,6 +10,8 @@ import { Usuario } from '../../src/domain/entities/Usuario';
 import {
   AnalisisLoteRepositoryPort,
   EventoTrazabilidadRepositoryPort,
+  ReferenciaAnclaje,
+  ReferenciaAnclajeRepositoryPort,
   LoteRepositoryPort,
   PrediccionCalidadRepositoryPort,
   ParcelaRepositoryPort,
@@ -29,6 +31,7 @@ export class Memoria {
   parcelas: Parcela[] = [];
   lotes: Lote[] = [];
   eventos: EventoTrazabilidad[] = [];
+  anclajes: ReferenciaAnclaje[] = [];
   predicciones: PrediccionCalidad[] = [];
   analisis: AnalisisLote[] = [];
   auditoria: { administradorId: string; productorId: string; fecha: Date }[] = [];
@@ -288,6 +291,9 @@ export class MemoriaEventos implements EventoTrazabilidadRepositoryPort {
   async guardar(evento: EventoTrazabilidad) {
     this.memoria.eventos = [...this.memoria.eventos, evento];
   }
+  async buscarPorId(id: string) {
+    return this.memoria.eventos.find((evento) => evento.id === id) ?? null;
+  }
   async listarPorLote(loteId: string) {
     return this.listarPorLotes([loteId]);
   }
@@ -297,6 +303,23 @@ export class MemoriaEventos implements EventoTrazabilidadRepositoryPort {
       .filter((evento) => ids.has(evento.loteId))
       .slice()
       .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+  }
+}
+
+export class MemoriaReferenciasAnclaje implements ReferenciaAnclajeRepositoryPort {
+  constructor(private readonly memoria: Memoria) {}
+  async guardar(referencia: ReferenciaAnclaje) {
+    if (this.memoria.anclajes.some((actual) => actual.eventoId === referencia.eventoId)) {
+      throw new ConflictError('Este evento ya tiene un anclaje.');
+    }
+    this.memoria.anclajes = [...this.memoria.anclajes, referencia];
+  }
+  async buscarPorEvento(eventoId: string) {
+    return this.memoria.anclajes.find((anclaje) => anclaje.eventoId === eventoId) ?? null;
+  }
+  async listarPorEventos(eventoIds: string[]) {
+    const ids = new Set(eventoIds);
+    return this.memoria.anclajes.filter((anclaje) => ids.has(anclaje.eventoId));
   }
 }
 
@@ -318,6 +341,8 @@ export class MemoriaPredicciones implements PrediccionCalidadRepositoryPort {
 }
 
 function retirarLotes(memoria: Memoria, loteIds: string[]) {
+  const eventos = new Set(memoria.eventos.filter((evento) => loteIds.includes(evento.loteId)).map((evento) => evento.id));
+  memoria.anclajes = memoria.anclajes.filter((anclaje) => !eventos.has(anclaje.eventoId));
   memoria.predicciones = memoria.predicciones.filter((prediccion) => !loteIds.includes(prediccion.loteId));
   memoria.eventos = memoria.eventos.filter((evento) => !loteIds.includes(evento.loteId));
   memoria.analisis = memoria.analisis.filter((analisis) => !loteIds.includes(analisis.loteId));

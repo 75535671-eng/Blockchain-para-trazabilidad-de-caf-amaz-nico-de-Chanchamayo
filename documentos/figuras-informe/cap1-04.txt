@@ -1,0 +1,1 @@
+La arquitectura debe permitir incorporar nuevos usuarios y lotes sin afectar significativamente el funcionamiento.

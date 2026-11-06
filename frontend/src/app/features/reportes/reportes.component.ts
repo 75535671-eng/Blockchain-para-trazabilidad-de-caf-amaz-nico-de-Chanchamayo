@@ -22,13 +22,16 @@ export class ReportesComponent implements OnInit {
   productorId = '';
   parcelaId = '';
   loteId = '';
+  busquedaLote = '';
+  listaLotesAbierta = false;
+  periodo: PeriodoReporte = 'todo';
   desde = '';
   hasta = '';
   reporte: ReporteTrazabilidad | null = null;
   error = '';
   consultando = false;
+  descargando = false;
   readonly etiquetaEtapa = etiquetaEtapa;
-  readonly descargar = descargarReporte;
 
   constructor(
     private readonly api: ApiService,
@@ -48,7 +51,7 @@ export class ReportesComponent implements OnInit {
         this.parcelas = datos.parcelas;
         this.lotes = vistasDeLotes(datos.lotes, datos.parcelas, datos.productores);
         if (pedido && this.lotes.some((lote) => lote.id === pedido)) {
-          this.loteId = pedido;
+          this.elegirLote(this.lotes.find((lote) => lote.id === pedido)!);
         }
         this.consultar();
       },
@@ -77,6 +80,90 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  get sugerencias(): LoteVista[] {
+    return this.coincidencias().slice(0, 8);
+  }
+
+  get lotesSinMostrar(): number {
+    return Math.max(0, this.coincidencias().length - this.sugerencias.length);
+  }
+
+  alCambiarProductor(id: string): void {
+    this.productorId = id;
+    if (this.parcelaId && !this.parcelasVisibles.some((parcela) => parcela.id === this.parcelaId)) {
+      this.parcelaId = '';
+    }
+    this.limpiarLoteSiNoVisible();
+  }
+
+  alCambiarParcela(id: string): void {
+    this.parcelaId = id;
+    this.limpiarLoteSiNoVisible();
+  }
+
+  alCambiarPeriodo(periodo: PeriodoReporte): void {
+    this.periodo = periodo;
+    if (periodo !== 'elegir') {
+      this.desde = '';
+      this.hasta = '';
+      return;
+    }
+    const cosecha = this.loteSeleccionado?.fechaCosecha.slice(0, 10);
+    if (cosecha && !this.desde) {
+      this.desde = cosecha;
+    }
+  }
+
+  buscarLote(evento: Event): void {
+    this.busquedaLote = (evento.target as HTMLInputElement).value;
+    this.listaLotesAbierta = true;
+    if (this.etiquetaLote(this.loteId).toLowerCase() !== this.busquedaLote.trim().toLowerCase()) {
+      this.loteId = '';
+      if (this.periodo === 'cosecha') {
+        this.periodo = 'todo';
+      }
+    }
+  }
+
+  elegirLote(lote: LoteVista): void {
+    this.loteId = lote.id;
+    this.busquedaLote = this.etiquetaLote(lote.id);
+    this.listaLotesAbierta = false;
+  }
+
+  elegirTodosLosLotes(): void {
+    this.loteId = '';
+    this.busquedaLote = '';
+    this.listaLotesAbierta = false;
+    if (this.periodo === 'cosecha') {
+      this.periodo = 'todo';
+    }
+  }
+
+  cerrarListaLotes(): void {
+    this.listaLotesAbierta = false;
+  }
+
+  etiquetaLote(id: string): string {
+    const lote = this.lotes.find((item) => item.id === id);
+    if (!lote) {
+      return '';
+    }
+    return `${lote.codigo} · ${lote.productor} · ${lote.parcela}`;
+  }
+
+  async descargar(reporte: ReporteTrazabilidad): Promise<void> {
+    if (this.descargando) {
+      return;
+    }
+    this.descargando = true;
+    try {
+      await descargarReporte(reporte);
+    } finally {
+      this.descargando = false;
+    }
+  }
+
   consultar(): void {
     this.error = '';
     this.consultando = true;
@@ -90,11 +177,12 @@ export class ReportesComponent implements OnInit {
     if (this.parcelaId) {
       filtros['parcelaId'] = this.parcelaId;
     }
-    if (this.desde) {
-      filtros['desde'] = this.desde;
+    const rango = this.rango();
+    if (rango.desde) {
+      filtros['desde'] = rango.desde;
     }
-    if (this.hasta) {
-      filtros['hasta'] = this.hasta;
+    if (rango.hasta) {
+      filtros['hasta'] = rango.hasta;
     }
     this.api.consultarReporte(filtros).subscribe({
       next: (reporte) => {
@@ -108,4 +196,54 @@ export class ReportesComponent implements OnInit {
       },
     });
   }
+
+  private get loteSeleccionado(): LoteVista | undefined {
+    return this.lotes.find((lote) => lote.id === this.loteId);
+  }
+
+  private coincidencias(): LoteVista[] {
+    const texto = this.busquedaLote.trim().toLowerCase();
+    const etiqueta = this.etiquetaLote(this.loteId).toLowerCase();
+    if (!texto || texto === etiqueta) {
+      return this.lotesVisibles;
+    }
+    return this.lotesVisibles.filter((lote) => this.etiquetaLote(lote.id).toLowerCase().includes(texto));
+  }
+
+  private limpiarLoteSiNoVisible(): void {
+    if (this.loteId && !this.lotesVisibles.some((lote) => lote.id === this.loteId)) {
+      this.elegirTodosLosLotes();
+    }
+  }
+
+  private rango(): { desde?: string; hasta?: string } {
+    const hoy = new Date();
+    if (this.periodo === 'anio') {
+      return { desde: `${hoy.getFullYear()}-01-01`, hasta: isoLocal(hoy) };
+    }
+    if (this.periodo === 'dias') {
+      const inicio = new Date(hoy);
+      inicio.setDate(inicio.getDate() - 30);
+      return { desde: isoLocal(inicio), hasta: isoLocal(hoy) };
+    }
+    if (this.periodo === 'cosecha') {
+      const cosecha = this.loteSeleccionado?.fechaCosecha.slice(0, 10);
+      return cosecha ? { desde: cosecha, hasta: isoLocal(hoy) } : {};
+    }
+    if (this.periodo === 'elegir') {
+      return {
+        desde: this.desde || undefined,
+        hasta: this.hasta || undefined,
+      };
+    }
+    return {};
+  }
+}
+
+type PeriodoReporte = 'todo' | 'anio' | 'dias' | 'cosecha' | 'elegir';
+
+function isoLocal(fecha: Date): string {
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
 }

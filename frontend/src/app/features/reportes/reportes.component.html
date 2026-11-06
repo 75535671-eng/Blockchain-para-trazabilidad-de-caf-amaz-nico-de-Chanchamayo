@@ -12,7 +12,7 @@
   <div class="form-grid">
     @if (auth.sesion()?.rol === 'ADMINISTRADOR') {
       <label class="campo">Productor
-        <select [(ngModel)]="productorId" name="productorId">
+        <select [ngModel]="productorId" (ngModelChange)="alCambiarProductor($event)" name="productorId">
           <option value="">Todos</option>
           @for (productor of productores; track productor.id) {
             <option [value]="productor.id">{{ productor.nombre }}</option>
@@ -21,28 +21,68 @@
       </label>
     }
     <label class="campo">Parcela
-      <select [(ngModel)]="parcelaId" name="parcelaId">
+      <select [ngModel]="parcelaId" (ngModelChange)="alCambiarParcela($event)" name="parcelaId">
         <option value="">Todas</option>
         @for (parcela of parcelasVisibles; track parcela.id) {
           <option [value]="parcela.id">{{ parcela.nombre }}</option>
         }
       </select>
     </label>
-    <label class="campo">Lote
-      <select [(ngModel)]="loteId" name="loteId">
-        <option value="">Todos</option>
-        @for (lote of lotesVisibles; track lote.id) {
-          <option [value]="lote.id">{{ lote.codigo }}</option>
+    <div class="campo combo campo-amplio">Lote
+      <input
+        type="text"
+        [value]="busquedaLote"
+        (input)="buscarLote($event)"
+        (focus)="listaLotesAbierta = true"
+        (blur)="cerrarListaLotes()"
+        placeholder="Código, productor o parcela"
+        autocomplete="off"
+      />
+      @if (listaLotesAbierta) {
+        <ul class="combo-lista">
+          <li><button type="button" (mousedown)="elegirTodosLosLotes()">Todos los lotes de este filtro</button></li>
+          @for (lote of sugerencias; track lote.id) {
+            <li><button type="button" (mousedown)="elegirLote(lote)">{{ etiquetaLote(lote.id) }}</button></li>
+          }
+          @if (sugerencias.length === 0) {
+            <li class="combo-vacio">Ningún lote coincide con esa búsqueda.</li>
+          } @else if (lotesSinMostrar > 0) {
+            <li class="combo-vacio">Hay {{ lotesSinMostrar }} más. Sigue escribiendo el código.</li>
+          }
+        </ul>
+      }
+      @if (loteId) {
+        <p class="aviso-suave">Lote elegido. Cambia el texto para buscar otro.</p>
+      } @else {
+        <p class="aviso-suave">{{ lotesVisibles.length }} lotes. Escribe el código para encontrar uno.</p>
+      }
+    </div>
+    <fieldset class="periodo">
+      <legend>Período de los eventos</legend>
+      <div class="periodo-opciones">
+        <label><input type="radio" name="periodo" value="todo" [ngModel]="periodo" (ngModelChange)="alCambiarPeriodo($event)" /> Todo el recorrido</label>
+        <label><input type="radio" name="periodo" value="anio" [ngModel]="periodo" (ngModelChange)="alCambiarPeriodo($event)" /> Este año</label>
+        <label><input type="radio" name="periodo" value="dias" [ngModel]="periodo" (ngModelChange)="alCambiarPeriodo($event)" /> Últimos 30 días</label>
+        @if (loteId) {
+          <label><input type="radio" name="periodo" value="cosecha" [ngModel]="periodo" (ngModelChange)="alCambiarPeriodo($event)" /> Desde la cosecha</label>
         }
-      </select>
-    </label>
-    <label class="campo">Desde <input type="date" [(ngModel)]="desde" name="desde" /></label>
-    <label class="campo">Hasta <input type="date" [(ngModel)]="hasta" name="hasta" /></label>
+        <label><input type="radio" name="periodo" value="elegir" [ngModel]="periodo" (ngModelChange)="alCambiarPeriodo($event)" /> Elegir fechas</label>
+      </div>
+      <p class="aviso-suave">Opcional. Acota los eventos del resultado.</p>
+      @if (periodo === 'elegir') {
+        <div class="form-grid fechas">
+          <label class="campo">Desde <input type="date" [(ngModel)]="desde" name="desde" /></label>
+          <label class="campo">Hasta <input type="date" [(ngModel)]="hasta" name="hasta" /></label>
+        </div>
+      }
+    </fieldset>
   </div>
   <div class="acciones">
     <button class="btn" [disabled]="consultando">{{ consultando ? 'Consultando…' : 'Consultar' }}</button>
     @if (reporte?.disponible) {
-      <button type="button" class="btn secundario" (click)="descargar(reporte!)">Descargar reporte</button>
+      <button type="button" class="btn secundario" [disabled]="descargando" (click)="descargar(reporte!)">
+        {{ descargando ? 'Generando PDF…' : 'Descargar PDF' }}
+      </button>
     }
   </div>
 </form>

@@ -8,6 +8,46 @@
 }
 
 .filtros, .ficha { margin-top: 0.9rem; }
+
+.campo-amplio { grid-column: 1 / -1; }
+
+.periodo {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.periodo legend {
+  margin-bottom: 0.45rem;
+  font-size: 0.92rem;
+}
+
+.periodo-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.periodo-opciones label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--input);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.periodo-opciones input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--forest-2);
+}
+
+.fechas { margin-top: 0.7rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
 .resumen {
   display: grid;

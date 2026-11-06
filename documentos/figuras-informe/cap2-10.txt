@@ -1,0 +1,1 @@
+En este caso, el modelo puede representar la probabilidad condicional mediante:

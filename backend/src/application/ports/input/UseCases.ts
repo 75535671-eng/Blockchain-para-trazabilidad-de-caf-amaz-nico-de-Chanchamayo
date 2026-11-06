@@ -3,6 +3,8 @@ import {
   ConsultaLoteDto,
   EventoTrazabilidadDto,
   IntentoPrediccionDto,
+  VerificacionIntegridadDto,
+  IntentoTrazabilidadDto,
   LoteDto,
   ParcelaDto,
   PrediccionCalidadDto,
@@ -11,6 +13,7 @@ import {
   UsuarioDto,
 } from '../../dto/dtos';
 import { EvaluacionModelo } from '../../../domain/services/inteligencia/EvaluacionModeloPoc';
+import { EvaluacionTrazabilidad } from '../../../domain/services/inteligencia/EvaluacionTrazabilidadPoc';
 import { RolUsuario } from '../../../domain/entities/Usuario';
 
 export interface RegistrarUsuarioUseCase {
@@ -240,6 +243,10 @@ export interface ListarEventosVisiblesUseCase {
   ejecutar(actor: Actor): Promise<EventoTrazabilidadDto[]>;
 }
 
+export interface VerificarIntegridadEventoUseCase {
+  ejecutar(comando: { actor: Actor; eventoId: string }): Promise<VerificacionIntegridadDto>;
+}
+
 export interface PredecirCalidadUseCase {
   ejecutar(comando: { actor: Actor; loteId: string }): Promise<IntentoPrediccionDto>;
 }
@@ -254,6 +261,14 @@ export interface ListarPrediccionesVisiblesUseCase {
 
 export interface ConsultarEvaluacionModeloUseCase {
   ejecutar(): Promise<EvaluacionModelo>;
+}
+
+export interface ConsultarEvaluacionTrazabilidadUseCase {
+  ejecutar(): Promise<EvaluacionTrazabilidad>;
+}
+
+export interface EstimarTrazabilidadUseCase {
+  ejecutar(comando: { actor: Actor; loteId: string }): Promise<IntentoTrazabilidadDto>;
 }
 
 export interface GenerarReporteTrazabilidadUseCase {

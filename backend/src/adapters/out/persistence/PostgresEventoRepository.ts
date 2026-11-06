@@ -45,6 +45,15 @@ export class PostgresEventoTrazabilidadRepository implements EventoTrazabilidadR
     }
   }
 
+  async buscarPorId(id: string): Promise<EventoTrazabilidad | null> {
+    const lote = await this.pool.query('SELECT lote_id FROM eventos_trazabilidad WHERE id = $1', [id]);
+    if (lote.rowCount === 0) {
+      return null;
+    }
+    const eventos = await this.listarPorLote(String(lote.rows[0].lote_id));
+    return eventos.find((evento) => evento.id === id) ?? null;
+  }
+
   async listarPorLote(loteId: string): Promise<EventoTrazabilidad[]> {
     return this.listarPorLotes([loteId]);
   }
@@ -53,22 +62,7 @@ export class PostgresEventoTrazabilidadRepository implements EventoTrazabilidadR
     if (loteIds.length === 0) {
       return [];
     }
-    const resultado = await this.pool.query(
-      `SELECT eventos.id,
-              eventos.lote_id,
-              eventos.etapa,
-              eventos.fecha,
-              eventos.descripcion,
-              eventos.created_at,
-              variables.id AS variable_id,
-              variables.metodo_beneficio,
-              variables.humedad_porcentaje
-       FROM eventos_trazabilidad eventos
-       LEFT JOIN variables_productivas variables ON variables.evento_id = eventos.id
-       WHERE eventos.lote_id = ANY($1::uuid[])
-       ORDER BY eventos.fecha ASC, eventos.created_at ASC, eventos.id ASC`,
-      [loteIds],
-    );
+    const resultado = await this.pool.query('SELECT * FROM listar_eventos_lote($1::uuid[])', [loteIds]);
     return filas(resultado).map(mapEvento);
   }
 }

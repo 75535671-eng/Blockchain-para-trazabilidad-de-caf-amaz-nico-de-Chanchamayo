@@ -91,7 +91,7 @@ export class GenerarReporteTrazabilidad implements GenerarReporteTrazabilidadUse
           distrito: parcela.distrito,
           localidad: parcela.localidad,
           altitudMsnm: parcela.altitudMsnm,
-          eventos: delLote.map(aEventoDto),
+          eventos: delLote.map((evento) => aEventoDto(evento)),
         },
       ];
     });

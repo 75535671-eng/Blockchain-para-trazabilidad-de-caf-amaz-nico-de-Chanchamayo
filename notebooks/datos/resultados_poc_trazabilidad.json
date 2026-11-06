@@ -1,0 +1,132 @@
+{
+  "identificador": "PoC RF-IA-02",
+  "pregunta": "Estimar si la trazabilidad previa a la exportación está completa.",
+  "semilla": 42,
+  "registros": 200,
+  "entrenamiento": 150,
+  "prueba": 50,
+  "umbral_indice": 2.15,
+  "entradas": [
+    "tiene_beneficio",
+    "tiene_trilla",
+    "tiene_almacenamiento",
+    "tiene_traslado",
+    "orden_cronologico",
+    "humedad_ausente",
+    "humedad_porcentaje",
+    "dias_entre_extremos"
+  ],
+  "excluido_de_la_entrada": [
+    "indice_trazabilidad",
+    "trazabilidad_completa",
+    "EXPORTACION"
+  ],
+  "conteo_clases": {
+    "Completa": 108,
+    "Incompleta": 92
+  },
+  "clasificacion": [
+    {
+      "modelo": "Regresión logística",
+      "accuracy": 0.88,
+      "f1_macro": 0.8782,
+      "inferencia_ms": 0.617,
+      "decision_experimental": "GO"
+    },
+    {
+      "modelo": "Random Forest",
+      "accuracy": 0.86,
+      "f1_macro": 0.8586,
+      "inferencia_ms": 10.441,
+      "decision_experimental": "GO"
+    },
+    {
+      "modelo": "Gradient Boosting",
+      "accuracy": 0.84,
+      "f1_macro": 0.839,
+      "inferencia_ms": 0.739,
+      "decision_experimental": "GO"
+    }
+  ],
+  "mejor_clasificador": {
+    "modelo": "Regresión logística",
+    "accuracy": 0.88,
+    "f1_macro": 0.8782,
+    "inferencia_ms": 0.617,
+    "decision_experimental": "GO"
+  },
+  "decision_experimental": "GO",
+  "decision_integracion": "GO CON CONDICIONES",
+  "ejemplo": {
+    "lote_id": "TRAZA-002",
+    "entradas": {
+      "tiene_beneficio": 1.0,
+      "tiene_trilla": 1.0,
+      "tiene_almacenamiento": 1.0,
+      "tiene_traslado": 0.0,
+      "orden_cronologico": 1.0,
+      "humedad_ausente": 0.0,
+      "humedad_porcentaje": 11.58,
+      "dias_entre_extremos": 17.0
+    },
+    "indice_trazabilidad": 2.1119,
+    "etiqueta": "Incompleta",
+    "prediccion_logistica": "Completa"
+  },
+  "modelo_logistico": {
+    "entradas": [
+      "tiene_beneficio",
+      "tiene_trilla",
+      "tiene_almacenamiento",
+      "tiene_traslado",
+      "orden_cronologico",
+      "humedad_ausente",
+      "humedad_porcentaje",
+      "dias_entre_extremos"
+    ],
+    "media": [
+      0.76,
+      0.74,
+      0.6866666666666666,
+      0.68,
+      0.8066666666666666,
+      0.24,
+      11.117600000000001,
+      16.94
+    ],
+    "escala": [
+      0.4270831300812525,
+      0.4386342439892261,
+      0.46384863431463885,
+      0.46647615158762407,
+      0.39491208585653026,
+      0.4270831300812525,
+      0.9460878606133788,
+      9.515061744413433
+    ],
+    "clases": [
+      "Completa",
+      "Incompleta"
+    ],
+    "coeficientes": [
+      [
+        -0.8250042370900039,
+        -0.3169627445427465,
+        -0.43728920911453123,
+        -1.1290733437892992,
+        -0.6262294133572118,
+        0.8250042370900039,
+        -0.1187539484023581,
+        -0.6025279802106963
+      ]
+    ],
+    "intercepto": [
+      0.05621159074215178
+    ]
+  },
+  "versiones": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1"
+  }
+}

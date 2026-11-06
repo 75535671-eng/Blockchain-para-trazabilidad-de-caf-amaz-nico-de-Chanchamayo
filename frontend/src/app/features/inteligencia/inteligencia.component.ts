@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { EvaluacionModelo, EventoTrazabilidad, IntentoPrediccion } from '../../core/modelos';
+import { EvaluacionModelo, EvaluacionTrazabilidad, EventoTrazabilidad, IntentoPrediccion, IntentoTrazabilidad } from '../../core/modelos';
 import { LoteVista, vistasDeLotes } from '../../shared/lote-vista';
 
 @Component({
@@ -17,7 +17,9 @@ export class InteligenciaComponent implements OnInit {
   loteId = '';
   eventos: EventoTrazabilidad[] = [];
   intento: IntentoPrediccion | null = null;
+  estimacion: IntentoTrazabilidad | null = null;
   evaluacion: EvaluacionModelo | null = null;
+  evaluacionTrazabilidad: EvaluacionTrazabilidad | null = null;
   error = '';
   ejecutando = false;
 
@@ -31,6 +33,10 @@ export class InteligenciaComponent implements OnInit {
     this.api.consultarEvaluacion().subscribe({
       next: (evaluacion) => (this.evaluacion = evaluacion),
       error: () => (this.error = 'No se pudo consultar la evaluación del modelo.'),
+    });
+    this.api.consultarEvaluacionTrazabilidad().subscribe({
+      next: (evaluacion) => (this.evaluacionTrazabilidad = evaluacion),
+      error: () => (this.error = 'No se pudo consultar la evaluación de trazabilidad.'),
     });
     forkJoin({
       lotes: this.api.listarLotes(),
@@ -56,6 +62,7 @@ export class InteligenciaComponent implements OnInit {
 
   alCambiarLote(): void {
     this.intento = null;
+    this.estimacion = null;
     this.cargarEventos();
   }
 
@@ -84,6 +91,24 @@ export class InteligenciaComponent implements OnInit {
       error: (error: { error?: { error?: string } }) => {
         this.ejecutando = false;
         this.error = error.error?.error ?? 'No se pudo ejecutar la predicción.';
+      },
+    });
+  }
+
+  estimarTrazabilidad(): void {
+    if (!this.loteId) {
+      return;
+    }
+    this.ejecutando = true;
+    this.error = '';
+    this.api.estimarTrazabilidad(this.loteId).subscribe({
+      next: (estimacion) => {
+        this.estimacion = estimacion;
+        this.ejecutando = false;
+      },
+      error: (error: { error?: { error?: string } }) => {
+        this.ejecutando = false;
+        this.error = error.error?.error ?? 'No se pudo estimar la trazabilidad.';
       },
     });
   }

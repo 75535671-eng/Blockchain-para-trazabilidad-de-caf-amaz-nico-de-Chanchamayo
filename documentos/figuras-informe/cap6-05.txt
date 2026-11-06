@@ -1,0 +1,1 @@
+Figura A.3. Construcción del dataset, preprocesamiento y regla de decisión.

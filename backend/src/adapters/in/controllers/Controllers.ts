@@ -27,9 +27,12 @@ import {
   OtorgarAdministradorUseCase,
   QuitarAdministradorUseCase,
   ConsultarEvaluacionModeloUseCase,
+  ConsultarEvaluacionTrazabilidadUseCase,
+  EstimarTrazabilidadUseCase,
   GenerarReporteTrazabilidadUseCase,
   ListarEventosUseCase,
   ListarEventosVisiblesUseCase,
+  VerificarIntegridadEventoUseCase,
   ListarPrediccionesUseCase,
   ListarPrediccionesVisiblesUseCase,
   PredecirCalidadUseCase,
@@ -263,6 +266,7 @@ export class EventoController {
     private readonly registrar: RegistrarEventoUseCase,
     private readonly listar: ListarEventosUseCase,
     private readonly listarVisibles: ListarEventosVisiblesUseCase,
+    private readonly verificarIntegridad: VerificarIntegridadEventoUseCase,
   ) {}
 
   crear = async (req: Request, res: Response): Promise<void> => {
@@ -287,6 +291,12 @@ export class EventoController {
   listarTodos = async (_req: Request, res: Response): Promise<void> => {
     res.status(200).json(await this.listarVisibles.ejecutar(actorDe(res)));
   };
+
+  verificar = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(
+      await this.verificarIntegridad.ejecutar({ actor: actorDe(res), eventoId: String(req.params.id) }),
+    );
+  };
 }
 
 function consultaTexto(valor: unknown): string | null {
@@ -299,6 +309,8 @@ export class InteligenciaController {
     private readonly listar: ListarPrediccionesUseCase,
     private readonly listarVisibles: ListarPrediccionesVisiblesUseCase,
     private readonly evaluar: ConsultarEvaluacionModeloUseCase,
+    private readonly estimar: EstimarTrazabilidadUseCase,
+    private readonly evaluarTrazabilidad: ConsultarEvaluacionTrazabilidadUseCase,
   ) {}
 
   predecirUno = async (req: Request, res: Response): Promise<void> => {
@@ -315,6 +327,14 @@ export class InteligenciaController {
 
   evaluacion = async (_req: Request, res: Response): Promise<void> => {
     res.status(200).json(await this.evaluar.ejecutar());
+  };
+
+  estimarTrazabilidad = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.estimar.ejecutar({ actor: actorDe(res), loteId: String(req.params.id) }));
+  };
+
+  evaluacionTrazabilidad = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(await this.evaluarTrazabilidad.ejecutar());
   };
 }
 

@@ -1,0 +1,1 @@
+Figura A.5. Cálculo de accuracy, F1 macro y regresión del puntaje.

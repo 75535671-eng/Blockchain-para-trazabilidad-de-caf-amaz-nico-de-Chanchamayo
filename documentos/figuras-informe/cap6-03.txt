@@ -1,0 +1,1 @@
+Figura A.1. Inicio del notebook en Colab, con el experimento cargado y la celda ejecutada.

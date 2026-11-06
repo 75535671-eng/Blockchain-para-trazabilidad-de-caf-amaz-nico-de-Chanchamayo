@@ -1,0 +1,1 @@
+HU-002: Como usuario autorizado necesito registrar productores de café para relacionarlos posteriormente con sus parcelas y lotes.
