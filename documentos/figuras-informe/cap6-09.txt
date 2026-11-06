@@ -1,1 +1,0 @@
-Figura A.7. Salida de Colab: clases, métricas de clasificación y regresión.

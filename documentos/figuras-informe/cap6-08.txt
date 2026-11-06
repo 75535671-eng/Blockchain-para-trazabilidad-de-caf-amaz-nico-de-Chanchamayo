@@ -1,1 +1,0 @@
-Figura A.6. Guardado del JSON y de la gráfica, y llamada a la ejecución.

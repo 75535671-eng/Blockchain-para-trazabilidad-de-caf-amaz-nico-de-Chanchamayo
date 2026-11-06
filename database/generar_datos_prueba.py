@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Carga de demostración: 200 lotes y 800 eventos para el video de la lista de cotejo."""
+"""Carga de prueba: 20 productores, 40 parcelas, 200 lotes y 800 eventos."""
 
 import json
 import uuid
@@ -30,17 +30,15 @@ def predecir(vector: list[float]) -> str:
 
 def main() -> None:
     lineas = [
-        "-- Datos para el video de la Unidad 3.",
-        "-- 20 productores, 40 parcelas, 200 lotes y 800 eventos.",
-        "-- Ejecutar en el SQL Editor de Supabase después de las migraciones 001 a 007.",
-        "-- Se puede volver a ejecutar: borra solo los códigos CHNY-2026-VID.",
+        "-- Carga de prueba: 20 productores, 40 parcelas, 200 lotes y 800 eventos.",
+        "-- Idempotente para los códigos CHNY-2026-VID.",
         "BEGIN;",
         "DELETE FROM variables_productivas WHERE lote_id IN (SELECT id FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%');",
         "DELETE FROM eventos_trazabilidad WHERE lote_id IN (SELECT id FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%');",
         "DELETE FROM analisis_lotes WHERE lote_id IN (SELECT id FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%');",
         "DELETE FROM predicciones_calidad WHERE lote_id IN (SELECT id FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%');",
         "DELETE FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%';",
-        "DELETE FROM parcelas WHERE nombre LIKE 'Parcela video %';",
+        "DELETE FROM parcelas WHERE nombre LIKE 'Parcela video %' OR nombre LIKE 'Parcela prueba %';",
         "DELETE FROM productores WHERE documento_identidad LIKE 'VID%';",
     ]
     parcelas = []
@@ -48,7 +46,7 @@ def main() -> None:
         productor = uid(f"productor-{i}")
         lineas.append(
             "INSERT INTO productores (id, usuario_id, nombre, documento_identidad, telefono, organizacion) VALUES ("
-            f"{sql_texto(productor)}, NULL, {sql_texto(f'Productor video {i:02d}')}, {sql_texto(f'VID{i:08d}')}, "
+            f"{sql_texto(productor)}, NULL, {sql_texto(f'Productor prueba {i:02d}')}, {sql_texto(f'VID{i:08d}')}, "
             f"{sql_texto(f'964000{i:03d}')}, {sql_texto('Cooperativa demo Chanchamayo')});"
         )
         for j in range(1, 3):
@@ -64,7 +62,7 @@ def main() -> None:
                 localidad = sql_texto("Pichanaqui")
             lineas.append(
                 "INSERT INTO parcelas (id, productor_id, nombre, distrito, localidad, area_hectareas, altitud_msnm) VALUES ("
-                f"{sql_texto(parcela)}, {sql_texto(productor)}, {sql_texto(f'Parcela video {n:02d}')}, "
+                f"{sql_texto(parcela)}, {sql_texto(productor)}, {sql_texto(f'Parcela prueba {n:02d}')}, "
                 f"{sql_texto(DISTRITOS[(n - 1) % 7])}, {localidad}, {1 + (n % 5)}.{n % 10:01d}, {altitud});"
             )
             parcelas.append(parcela)
@@ -103,7 +101,7 @@ def main() -> None:
         lineas.append(
             "INSERT INTO lotes (id, codigo, parcela_id, fecha_cosecha, cantidad_kg, variedad, observaciones, estado) VALUES ("
             f"{sql_texto(lote)}, {sql_texto(codigo)}, {sql_texto(parcela)}, DATE {sql_texto(cosecha)}, {kg}, "
-            f"{sql_texto(variedad)}, {sql_texto('Lote de demostracion para el video')}, 'REGISTRADO');"
+            f"{sql_texto(variedad)}, {sql_texto('Lote de demostracion para la prueba')}, 'REGISTRADO');"
         )
         if n == 1:
             plan = [
@@ -148,22 +146,8 @@ def main() -> None:
             agregar_evento(lote, etapa, fecha, descripcion, metodo, humedad)
 
     lineas.append("COMMIT;")
-    lineas.append("-- Comprobacion esperada: 800 eventos.")
-    destino = Path(__file__).with_name("seed_video_800_eventos.sql")
+    destino = Path(__file__).with_name("seed_prueba_800_eventos.sql")
     destino.write_text("\n".join(lineas) + "\n", encoding="utf-8")
-    consultas = Path(__file__).with_name("consultas_metricas_video.sql")
-    consultas.write_text(
-        "\n".join([
-            "-- Leer estos resultados en camara en el episodio de metricas.",
-            "SELECT COUNT(*) AS productores FROM productores WHERE documento_identidad LIKE 'VID%';",
-            "SELECT COUNT(*) AS parcelas FROM parcelas WHERE nombre LIKE 'Parcela video %';",
-            "SELECT COUNT(*) AS lotes FROM lotes WHERE codigo LIKE 'CHNY-2026-VID%';",
-            "SELECT COUNT(*) AS eventos FROM eventos_trazabilidad e JOIN lotes l ON l.id = e.lote_id WHERE l.codigo LIKE 'CHNY-2026-VID%';",
-            "SELECT e.etapa, COUNT(*) AS cantidad FROM eventos_trazabilidad e JOIN lotes l ON l.id = e.lote_id WHERE l.codigo LIKE 'CHNY-2026-VID%' GROUP BY e.etapa ORDER BY e.etapa;",
-            "SELECT * FROM listar_eventos_lote(ARRAY[(SELECT id FROM lotes WHERE codigo = 'CHNY-2026-VID00001')]);",
-        ]) + "\n",
-        encoding="utf-8",
-    )
     if eventos != 800:
         raise SystemExit(f"eventos {eventos}, se esperaban 800")
     print("eventos", eventos)
@@ -172,7 +156,6 @@ def main() -> None:
     print("VID00001", predecir([1, 1, 1, 1, 1, 0, 11, 20]))
     print("VID00002", predecir([1, 1, 1, 0, 1, 0, 12.5, 17]))
     print(destino)
-    print(consultas)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import { ValidationError } from '../errors/DomainError';
 
-const FORMATO = /^CHNY-\d{4}-[A-F0-9]{8}$/;
+const FORMATO = /^CHNY-\d{4}-[A-Z0-9]{8}$/;
 
 export class IdentificadorLote {
   private constructor(readonly valor: string) {}

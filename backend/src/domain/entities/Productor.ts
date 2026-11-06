@@ -21,11 +21,37 @@ export class Productor {
     organizacion?: string | null;
     createdAt?: Date;
   }): Productor {
+    return Productor.armar(props, DocumentoIdentidad.crear(props.documento));
+  }
+
+  static reconstituir(props: {
+    id: string;
+    usuarioId?: string | null;
+    nombre: string;
+    documento: string;
+    telefono?: string | null;
+    organizacion?: string | null;
+    createdAt?: Date;
+  }): Productor {
+    return Productor.armar(props, DocumentoIdentidad.reconstituir(props.documento));
+  }
+
+  private static armar(
+    props: {
+      id: string;
+      usuarioId?: string | null;
+      nombre: string;
+      telefono?: string | null;
+      organizacion?: string | null;
+      createdAt?: Date;
+    },
+    documento: DocumentoIdentidad,
+  ): Productor {
     return new Productor(
       props.id,
       props.usuarioId ?? null,
       nombreObligatorio(props.nombre, 'productor'),
-      DocumentoIdentidad.crear(props.documento),
+      documento,
       textoOpcional(props.telefono, 20, 'teléfono'),
       textoOpcional(props.organizacion, 150, 'organización'),
       props.createdAt ?? new Date(),

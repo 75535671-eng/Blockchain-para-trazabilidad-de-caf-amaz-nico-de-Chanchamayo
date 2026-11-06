@@ -1,1 +1,0 @@
-Anexos. Capturas de la ejecución en Google Colab

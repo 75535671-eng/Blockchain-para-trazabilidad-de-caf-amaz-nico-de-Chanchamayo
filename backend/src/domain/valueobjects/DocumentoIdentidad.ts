@@ -15,4 +15,12 @@ export class DocumentoIdentidad {
     }
     return new DocumentoIdentidad(valor);
   }
+
+  static reconstituir(entrada: string): DocumentoIdentidad {
+    const valor = entrada.trim();
+    if (valor.length < 1 || valor.length > 15) {
+      throw new ValidationError('El documento guardado no es válido.');
+    }
+    return new DocumentoIdentidad(valor);
+  }
 }

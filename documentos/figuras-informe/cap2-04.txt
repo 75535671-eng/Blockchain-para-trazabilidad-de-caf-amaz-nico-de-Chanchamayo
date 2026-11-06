@@ -1,1 +1,0 @@
-HU-004: Como usuario autorizado necesito registrar lotes de café y asociarlos con una parcela para mantener identificado su origen.

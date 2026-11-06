@@ -1,1 +1,0 @@
-La principal ventaja para el proyecto es que la lógica de negocio puede permanecer estable aunque cambien las tecnologías de infraestructura. Por ejemplo, el caso de uso RegistrarLote puede trabajar con un contrato de repositorio sin conocer los detalles internos del SGBD.

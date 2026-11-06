@@ -1,1 +1,0 @@
-También se evaluará específicamente el uso del modo offline, considerando:

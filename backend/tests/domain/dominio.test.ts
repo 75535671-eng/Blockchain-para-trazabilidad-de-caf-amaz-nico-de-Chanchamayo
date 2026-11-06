@@ -58,7 +58,9 @@ describe('value objects y lote', () => {
     expect(() => FechaCosecha.crear('2026-12-01', '2026-09-24')).toThrow(/futura/);
     expect(() => Email.crear('no-es-correo')).toThrow(/correo/);
     expect(() => DocumentoIdentidad.crear('123')).toThrow(/DNI/);
+    expect(DocumentoIdentidad.reconstituir('VID00000001').valor).toBe('VID00000001');
     expect(IdentificadorLote.desdeTexto('CHNY-2026-AABBCCDD').valor).toContain('CHNY');
+    expect(IdentificadorLote.desdeTexto('CHNY-2026-VID00001').valor).toBe('CHNY-2026-VID00001');
   });
 });
 

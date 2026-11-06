@@ -649,7 +649,7 @@ function mapSolicitud(row: Fila): SolicitudRegistro {
 }
 
 function mapProductor(row: Fila): Productor {
-  return Productor.crear({
+  return Productor.reconstituir({
     id: String(row.id),
     usuarioId: row.usuario_id == null ? null : String(row.usuario_id),
     nombre: String(row.nombre),

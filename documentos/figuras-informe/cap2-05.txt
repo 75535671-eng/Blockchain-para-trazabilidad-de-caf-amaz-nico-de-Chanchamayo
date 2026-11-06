@@ -1,1 +1,0 @@
-HU-005: Como usuario autorizado necesito consultar la información de un lote para conocer sus datos registrados.

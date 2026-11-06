@@ -1,1 +1,0 @@
-Complementariamente, la solución se organiza mediante capas que representan diferentes responsabilidades dentro del sistema. Esta organización permite separar la presentación, comunicación, aplicación, dominio, puertos, adaptadores e infraestructura.

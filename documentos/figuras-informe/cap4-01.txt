@@ -1,1 +1,0 @@
-La lógica principal del proyecto puede representarse de la siguiente manera:

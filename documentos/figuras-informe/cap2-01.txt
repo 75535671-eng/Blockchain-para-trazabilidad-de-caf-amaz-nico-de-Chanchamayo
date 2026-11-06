@@ -1,1 +1,0 @@
-HU-001: Como usuario necesito registrarme e iniciar sesión en el sistema para acceder de forma segura a las funcionalidades correspondientes.

@@ -1,1 +1,0 @@
-La estructura permitirá mantener la trazabilidad entre lo que se pretende lograr y lo que finalmente se desarrolla:

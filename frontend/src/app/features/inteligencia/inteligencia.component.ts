@@ -45,7 +45,10 @@ export class InteligenciaComponent implements OnInit {
     }).subscribe({
       next: (datos) => {
         this.lotes = vistasDeLotes(datos.lotes, datos.parcelas, datos.productores);
-        this.loteId = this.lotes.some((lote) => lote.id === pedido) ? (pedido ?? '') : (this.lotes[0]?.id ?? '');
+        const demostracion = this.lotes.find((lote) => lote.codigo === 'CHNY-2026-VID00001');
+        this.loteId = this.lotes.some((lote) => lote.id === pedido)
+          ? (pedido ?? '')
+          : (demostracion?.id ?? this.lotes[0]?.id ?? '');
         this.cargarEventos();
       },
       error: () => (this.error = 'No se pudieron consultar los lotes.'),

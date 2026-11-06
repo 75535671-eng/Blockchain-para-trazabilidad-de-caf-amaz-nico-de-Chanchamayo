@@ -1,1 +1,0 @@
-HU-003: Como usuario autorizado necesito registrar parcelas de producción para identificar el origen del café.

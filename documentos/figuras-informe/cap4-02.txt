@@ -1,1 +1,0 @@
-La estructura general del proyecto será:
