@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { QueryResult } from 'pg';
 import { AnalisisLote } from '../../../domain/entities/AnalisisLote';
 import { Lote } from '../../../domain/entities/Lote';
 import { Parcela } from '../../../domain/entities/Parcela';
@@ -20,7 +19,7 @@ import {
   UsuarioRepositoryPort,
 } from '../../../application/ports/output/OutputPorts';
 import { Pool } from 'pg';
-import { borrarTrazabilidadDeLote, borrarTrazabilidadDeProductor } from './PostgresEventoRepository';
+import { conteo, filasDe, invocar, primeraDe, transaccion } from '../../../infrastructure/persistence/invocar';
 
 type Fila = Record<string, unknown>;
 
@@ -28,26 +27,21 @@ export class PostgresUsuarioRepository implements UsuarioRepositoryPort {
   constructor(private readonly pool: Pool) {}
 
   async buscarPorEmail(email: string): Promise<Usuario | null> {
-    const resultado = await this.pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_usuario_por_email', [email]));
     return fila ? mapUsuario(fila) : null;
   }
 
   async buscarPorId(id: string): Promise<Usuario | null> {
-    const resultado = await this.pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_usuario_por_id', [id]));
     return fila ? mapUsuario(fila) : null;
   }
 
   async actualizarRol(id: string, rol: RolUsuario): Promise<void> {
-    await this.pool.query('UPDATE usuarios SET rol = $1 WHERE id = $2', [rol, id]);
+    await invocar(this.pool, 'actualizar_rol_usuario', [id, rol]);
   }
 
   async actualizarPassword(id: string, passwordHash: string): Promise<void> {
-    await this.pool.query('UPDATE usuarios SET password_hash = $1, debe_cambiar_password = FALSE WHERE id = $2', [
-      passwordHash,
-      id,
-    ]);
+    await invocar(this.pool, 'actualizar_password_usuario', [id, passwordHash]);
   }
 }
 
@@ -55,43 +49,10 @@ export class PostgresRegistroCuenta implements RegistroCuentaProductorPort {
   constructor(private readonly pool: Pool) {}
 
   async guardar(usuario: Usuario, productor: Productor): Promise<void> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      await client.query(
-        `INSERT INTO usuarios (id, nombre, email, password_hash, rol, estado, debe_cambiar_password, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          usuario.id,
-          usuario.nombre,
-          usuario.email.valor,
-          usuario.passwordHash,
-          usuario.rol,
-          usuario.estado,
-          usuario.debeCambiarPassword,
-          usuario.createdAt,
-        ],
-      );
-      await client.query(
-        `INSERT INTO productores (id, usuario_id, nombre, documento_identidad, telefono, organizacion, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          productor.id,
-          productor.usuarioId,
-          productor.nombre,
-          productor.documento.valor,
-          productor.telefono,
-          productor.organizacion,
-          productor.createdAt,
-        ],
-      );
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    await transaccion(this.pool, async (client) => {
+      await invocar(client, 'insertar_usuario', datosUsuario(usuario));
+      await invocar(client, 'insertar_productor', datosProductor(productor));
+    });
   }
 }
 
@@ -99,105 +60,56 @@ export class PostgresSolicitudRegistroRepository implements SolicitudRegistroRep
   constructor(private readonly pool: Pool) {}
 
   async guardar(solicitud: SolicitudRegistro): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO solicitudes_registro
-        (id, nombre, documento_identidad, telefono, organizacion, email, password_hash, estado, fecha_solicitud)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        solicitud.id,
-        solicitud.nombre,
-        solicitud.documento.valor,
-        solicitud.telefono,
-        solicitud.organizacion,
-        solicitud.email.valor,
-        solicitud.passwordHash,
-        solicitud.estado,
-        solicitud.fechaSolicitud,
-      ],
-    );
+    await invocar(this.pool, 'insertar_solicitud', [
+      solicitud.id,
+      solicitud.nombre,
+      solicitud.documento.valor,
+      solicitud.telefono,
+      solicitud.organizacion,
+      solicitud.email.valor,
+      solicitud.passwordHash,
+      solicitud.estado,
+      solicitud.fechaSolicitud,
+    ]);
   }
 
   async buscarPorId(id: string): Promise<SolicitudRegistro | null> {
-    const resultado = await this.pool.query('SELECT * FROM solicitudes_registro WHERE id = $1', [id]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_solicitud_por_id', [id]));
     return fila ? mapSolicitud(fila) : null;
   }
 
   async buscarRecientePorEmail(email: string): Promise<SolicitudRegistro | null> {
-    const resultado = await this.pool.query(
-      'SELECT * FROM solicitudes_registro WHERE email = $1 ORDER BY fecha_solicitud DESC LIMIT 1',
-      [email],
-    );
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_solicitud_reciente_por_email', [email]));
     return fila ? mapSolicitud(fila) : null;
   }
 
   async existeActivaPorEmail(email: string): Promise<boolean> {
-    const resultado = await this.pool.query(
-      `SELECT 1 FROM solicitudes_registro WHERE email = $1 AND estado IN ('pendiente', 'aprobada') LIMIT 1`,
-      [email],
-    );
-    return filas(resultado).length > 0;
+    return primeraDe(await invocar(this.pool, 'buscar_solicitud_activa_por_email', [email])) != null;
   }
 
   async existeActivaPorDocumento(documento: string): Promise<boolean> {
-    const resultado = await this.pool.query(
-      `SELECT 1 FROM solicitudes_registro WHERE documento_identidad = $1 AND estado IN ('pendiente', 'aprobada') LIMIT 1`,
-      [documento],
-    );
-    return filas(resultado).length > 0;
+    return primeraDe(await invocar(this.pool, 'buscar_solicitud_activa_por_documento', [documento])) != null;
   }
 
   async listar(): Promise<SolicitudRegistro[]> {
-    const resultado = await this.pool.query('SELECT * FROM solicitudes_registro ORDER BY fecha_solicitud DESC');
-    return filas(resultado).map(mapSolicitud);
+    return filasDe(await invocar(this.pool, 'listar_solicitudes')).map(mapSolicitud);
   }
 
   async aprobar(solicitudId: string, usuario: Usuario, productor: Productor, administradorId: string): Promise<void> {
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-      const bloqueada = await client.query('SELECT estado FROM solicitudes_registro WHERE id = $1 FOR UPDATE', [solicitudId]);
-      const estado = primera(bloqueada)?.estado;
-      if (estado !== 'pendiente') {
-        throw new ConflictError('Esta solicitud ya fue resuelta.');
-      }
-      await client.query(
-        `INSERT INTO usuarios (id, nombre, email, password_hash, rol, estado, debe_cambiar_password, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          usuario.id,
-          usuario.nombre,
-          usuario.email.valor,
-          usuario.passwordHash,
-          usuario.rol,
-          usuario.estado,
-          usuario.debeCambiarPassword,
-          usuario.createdAt,
-        ],
-      );
-      await client.query(
-        `INSERT INTO productores (id, usuario_id, nombre, documento_identidad, telefono, organizacion, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          productor.id,
-          productor.usuarioId,
-          productor.nombre,
-          productor.documento.valor,
-          productor.telefono,
-          productor.organizacion,
-          productor.createdAt,
-        ],
-      );
-      await client.query(
-        `UPDATE solicitudes_registro
-         SET estado = 'aprobada', fecha_resolucion = NOW(), administrador_id = $2, usuario_id = $3, productor_id = $4
-         WHERE id = $1 AND estado = 'pendiente'`,
-        [solicitudId, administradorId, usuario.id, productor.id],
-      );
-      await client.query('COMMIT');
+      await transaccion(this.pool, async (client) => {
+        const bloqueada = primeraDe(await invocar(client, 'bloquear_solicitud', [solicitudId]));
+        if (bloqueada?.estado !== 'pendiente') {
+          throw new ConflictError('Esta solicitud ya fue resuelta.');
+        }
+        await invocar(client, 'insertar_usuario', datosUsuario(usuario));
+        await invocar(client, 'insertar_productor', datosProductor(productor));
+        await invocar(client, 'marcar_solicitud_aprobada', [solicitudId, administradorId, usuario.id, productor.id]);
+      });
     } catch (error) {
-      await client.query('ROLLBACK');
+      if (error instanceof ConflictError) {
+        throw error;
+      }
       if (esCorreoDuplicado(error)) {
         throw new ConflictError('Ya existe un usuario con ese correo.');
       }
@@ -205,19 +117,12 @@ export class PostgresSolicitudRegistroRepository implements SolicitudRegistroRep
         throw new ConflictError('Este productor ya se encuentra registrado');
       }
       throw error;
-    } finally {
-      client.release();
     }
   }
 
   async rechazar(solicitudId: string, administradorId: string, motivo: string): Promise<void> {
-    const resultado = await this.pool.query(
-      `UPDATE solicitudes_registro
-       SET estado = 'rechazada', motivo_rechazo = $2, fecha_resolucion = NOW(), administrador_id = $3
-       WHERE id = $1 AND estado = 'pendiente'`,
-      [solicitudId, motivo, administradorId],
-    );
-    if (resultado.rowCount !== 1) {
+    const resultado = await invocar(this.pool, 'rechazar_solicitud', [solicitudId, motivo, administradorId]);
+    if (conteo(resultado) !== 1) {
       throw new ConflictError('Esta solicitud ya fue resuelta.');
     }
   }
@@ -228,19 +133,7 @@ export class PostgresProductorRepository implements ProductorRepositoryPort {
 
   async guardar(productor: Productor): Promise<void> {
     try {
-      await this.pool.query(
-        `INSERT INTO productores (id, usuario_id, nombre, documento_identidad, telefono, organizacion, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          productor.id,
-          productor.usuarioId,
-          productor.nombre,
-          productor.documento.valor,
-          productor.telefono,
-          productor.organizacion,
-          productor.createdAt,
-        ],
-      );
+      await invocar(this.pool, 'insertar_productor', datosProductor(productor));
     } catch (error) {
       if (esDocumentoDuplicado(error)) {
         throw new ConflictError(MENSAJE_PRODUCTOR_DUPLICADO);
@@ -250,69 +143,43 @@ export class PostgresProductorRepository implements ProductorRepositoryPort {
   }
 
   async actualizar(productor: Productor): Promise<void> {
-    await this.pool.query(
-      `UPDATE productores SET nombre = $1, telefono = $2, organizacion = $3 WHERE id = $4`,
-      [productor.nombre, productor.telefono, productor.organizacion, productor.id],
-    );
+    await invocar(this.pool, 'actualizar_productor', [
+      productor.nombre,
+      productor.telefono,
+      productor.organizacion,
+      productor.id,
+    ]);
   }
 
   async eliminar(id: string, administradorId: string): Promise<void> {
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-      const productor = await client.query('SELECT id, usuario_id, documento_identidad FROM productores WHERE id = $1 FOR UPDATE', [id]);
-      const fila = primera(productor);
-      if (!fila) {
-        throw new NotFoundError('El productor no existe.');
-      }
-      const usuarioId = fila.usuario_id == null ? null : String(fila.usuario_id);
-      if (usuarioId === administradorId) {
-        throw new ConflictError('No puedes eliminar tu propia cuenta.');
-      }
-      if (usuarioId) {
-        await client.query(
-          `UPDATE solicitudes_registro SET administrador_id = NULL
-           WHERE administrador_id = $1 AND productor_id IS DISTINCT FROM $2`,
-          [usuarioId, id],
-        );
-      }
-      await client.query(
-        `DELETE FROM solicitudes_registro
-         WHERE productor_id = $1
-            OR ($2::uuid IS NOT NULL AND usuario_id = $2)
-            OR documento_identidad = $3`,
-        [id, usuarioId, String(fila.documento_identidad)],
-      );
-      await borrarTrazabilidadDeProductor(client, id);
-      await client.query(
-        `DELETE FROM analisis_lotes
-         WHERE lote_id IN (
-           SELECT lotes.id FROM lotes
-           JOIN parcelas ON parcelas.id = lotes.parcela_id
-           WHERE parcelas.productor_id = $1
-         )`,
-        [id],
-      );
-      await client.query(
-        `DELETE FROM lotes
-         WHERE parcela_id IN (SELECT id FROM parcelas WHERE productor_id = $1)`,
-        [id],
-      );
-      await client.query('DELETE FROM parcelas WHERE productor_id = $1', [id]);
-      const borrado = await client.query('DELETE FROM productores WHERE id = $1', [id]);
-      if (borrado.rowCount !== 1) {
-        throw new NotFoundError('El productor no existe.');
-      }
-      if (usuarioId) {
-        await client.query('DELETE FROM usuarios WHERE id = $1 AND id <> $2', [usuarioId, administradorId]);
-      }
-      await client.query(
-        'INSERT INTO auditoria_eliminaciones (id, administrador_id, productor_id) VALUES ($1, $2, $3)',
-        [randomUUID(), administradorId, id],
-      );
-      await client.query('COMMIT');
+      await transaccion(this.pool, async (client) => {
+        const fila = primeraDe(await invocar(client, 'bloquear_productor', [id]));
+        if (!fila) {
+          throw new NotFoundError('El productor no existe.');
+        }
+        const usuarioId = fila.usuario_id == null ? null : String(fila.usuario_id);
+        if (usuarioId === administradorId) {
+          throw new ConflictError('No puedes eliminar tu propia cuenta.');
+        }
+        if (usuarioId) {
+          await invocar(client, 'soltar_administrador_solicitudes', [usuarioId, id]);
+        }
+        await invocar(client, 'borrar_solicitudes_productor', [id, usuarioId, String(fila.documento_identidad)]);
+        await invocar(client, 'borrar_trazabilidad_productor', [id]);
+        await invocar(client, 'borrar_analisis_productor', [id]);
+        await invocar(client, 'borrar_lotes_productor', [id]);
+        await invocar(client, 'borrar_parcelas_productor', [id]);
+        const borrado = await invocar(client, 'borrar_productor', [id]);
+        if (conteo(borrado) !== 1) {
+          throw new NotFoundError('El productor no existe.');
+        }
+        if (usuarioId) {
+          await invocar(client, 'borrar_usuario_ajeno', [usuarioId, administradorId]);
+        }
+        await invocar(client, 'registrar_auditoria_eliminacion', [randomUUID(), administradorId, id]);
+      });
     } catch (error) {
-      await client.query('ROLLBACK');
       if (error instanceof NotFoundError || error instanceof ConflictError) {
         throw error;
       }
@@ -320,69 +187,46 @@ export class PostgresProductorRepository implements ProductorRepositoryPort {
         throw new ConflictError('No se pudo eliminar el productor porque otro registro todavía depende de él.');
       }
       throw error;
-    } finally {
-      client.release();
     }
   }
 
   async buscarPorId(id: string): Promise<Productor | null> {
-    return this.uno('SELECT * FROM productores WHERE id = $1', [id]);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_productor_por_id', [id]));
+    return fila ? mapProductor(fila) : null;
   }
 
   async buscarPorUsuarioId(usuarioId: string): Promise<Productor | null> {
-    return this.uno('SELECT * FROM productores WHERE usuario_id = $1', [usuarioId]);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_productor_por_usuario', [usuarioId]));
+    return fila ? mapProductor(fila) : null;
   }
 
   async buscarPorDocumento(documento: string): Promise<Productor | null> {
-    return this.uno('SELECT * FROM productores WHERE documento_identidad = $1', [documento]);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_productor_por_documento', [documento]));
+    return fila ? mapProductor(fila) : null;
   }
 
   async listar(): Promise<Productor[]> {
-    const resultado = await this.pool.query('SELECT * FROM productores ORDER BY nombre');
-    return filas(resultado).map(mapProductor);
+    return filasDe(await invocar(this.pool, 'listar_productores')).map(mapProductor);
   }
 
   async asignarCuenta(productorId: string, usuario: Usuario): Promise<void> {
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-      await client.query(
-        `INSERT INTO usuarios (id, nombre, email, password_hash, rol, estado, debe_cambiar_password, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          usuario.id,
-          usuario.nombre,
-          usuario.email.valor,
-          usuario.passwordHash,
-          usuario.rol,
-          usuario.estado,
-          usuario.debeCambiarPassword,
-          usuario.createdAt,
-        ],
-      );
-      const actualizado = await client.query(
-        'UPDATE productores SET usuario_id = $1 WHERE id = $2 AND usuario_id IS NULL',
-        [usuario.id, productorId],
-      );
-      if (actualizado.rowCount !== 1) {
-        throw new ConflictError('Este productor ya tiene una cuenta.');
-      }
-      await client.query('COMMIT');
+      await transaccion(this.pool, async (client) => {
+        await invocar(client, 'insertar_usuario', datosUsuario(usuario));
+        const actualizado = await invocar(client, 'asignar_cuenta_productor', [usuario.id, productorId]);
+        if (conteo(actualizado) !== 1) {
+          throw new ConflictError('Este productor ya tiene una cuenta.');
+        }
+      });
     } catch (error) {
-      await client.query('ROLLBACK');
+      if (error instanceof ConflictError) {
+        throw error;
+      }
       if (esCorreoDuplicado(error)) {
         throw new ConflictError('Ya existe un usuario con ese correo.');
       }
       throw error;
-    } finally {
-      client.release();
     }
-  }
-
-  private async uno(sql: string, params: string[]): Promise<Productor | null> {
-    const resultado = await this.pool.query(sql, params);
-    const fila = primera(resultado);
-    return fila ? mapProductor(fila) : null;
   }
 }
 
@@ -390,48 +234,37 @@ export class PostgresParcelaRepository implements ParcelaRepositoryPort {
   constructor(private readonly pool: Pool) {}
 
   async guardar(parcela: Parcela): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO parcelas
-        (id, productor_id, nombre, distrito, localidad, area_hectareas, altitud_msnm, latitud, longitud, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-      [
-        parcela.id,
-        parcela.productorId,
-        parcela.nombre,
-        parcela.distrito,
-        parcela.localidad,
-        parcela.area.valor,
-        parcela.altitudMsnm,
-        parcela.coordenadas?.latitud ?? null,
-        parcela.coordenadas?.longitud ?? null,
-        parcela.createdAt,
-      ],
-    );
+    await invocar(this.pool, 'insertar_parcela', [
+      parcela.id,
+      parcela.productorId,
+      parcela.nombre,
+      parcela.distrito,
+      parcela.localidad,
+      parcela.area.valor,
+      parcela.altitudMsnm,
+      parcela.coordenadas?.latitud ?? null,
+      parcela.coordenadas?.longitud ?? null,
+      parcela.createdAt,
+    ]);
   }
 
   async actualizar(parcela: Parcela): Promise<void> {
-    await this.pool.query(
-      `UPDATE parcelas
-       SET productor_id = $1, nombre = $2, distrito = $3, localidad = $4, area_hectareas = $5,
-           altitud_msnm = $6, latitud = $7, longitud = $8
-       WHERE id = $9`,
-      [
-        parcela.productorId,
-        parcela.nombre,
-        parcela.distrito,
-        parcela.localidad,
-        parcela.area.valor,
-        parcela.altitudMsnm,
-        parcela.coordenadas?.latitud ?? null,
-        parcela.coordenadas?.longitud ?? null,
-        parcela.id,
-      ],
-    );
+    await invocar(this.pool, 'actualizar_parcela', [
+      parcela.productorId,
+      parcela.nombre,
+      parcela.distrito,
+      parcela.localidad,
+      parcela.area.valor,
+      parcela.altitudMsnm,
+      parcela.coordenadas?.latitud ?? null,
+      parcela.coordenadas?.longitud ?? null,
+      parcela.id,
+    ]);
   }
 
   async eliminar(id: string): Promise<void> {
     try {
-      await this.pool.query('DELETE FROM parcelas WHERE id = $1', [id]);
+      await invocar(this.pool, 'borrar_parcela', [id]);
     } catch (error) {
       if (esClaveForanea(error)) {
         throw new ConflictError('No se puede eliminar esta parcela porque tiene registros asociados.');
@@ -441,31 +274,21 @@ export class PostgresParcelaRepository implements ParcelaRepositoryPort {
   }
 
   async buscarPorId(id: string): Promise<Parcela | null> {
-    const resultado = await this.pool.query('SELECT * FROM parcelas WHERE id = $1', [id]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_parcela_por_id', [id]));
     return fila ? mapParcela(fila) : null;
   }
 
   async buscarPorProductorYNombre(productorId: string, nombre: string): Promise<Parcela | null> {
-    const resultado = await this.pool.query(
-      'SELECT * FROM parcelas WHERE productor_id = $1 AND nombre = $2 LIMIT 1',
-      [productorId, nombre],
-    );
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_parcela_por_productor_nombre', [productorId, nombre]));
     return fila ? mapParcela(fila) : null;
   }
 
   async listar(): Promise<Parcela[]> {
-    const resultado = await this.pool.query('SELECT * FROM parcelas ORDER BY nombre');
-    return filas(resultado).map(mapParcela);
+    return filasDe(await invocar(this.pool, 'listar_parcelas')).map(mapParcela);
   }
 
   async listarPorProductor(productorId: string): Promise<Parcela[]> {
-    const resultado = await this.pool.query(
-      'SELECT * FROM parcelas WHERE productor_id = $1 ORDER BY nombre',
-      [productorId],
-    );
-    return filas(resultado).map(mapParcela);
+    return filasDe(await invocar(this.pool, 'listar_parcelas_productor', [productorId])).map(mapParcela);
   }
 }
 
@@ -473,75 +296,53 @@ export class PostgresLoteRepository implements LoteRepositoryPort {
   constructor(private readonly pool: Pool) {}
 
   async guardar(lote: Lote): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO lotes
-        (id, codigo, parcela_id, fecha_cosecha, cantidad_kg, variedad, observaciones, estado, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        lote.id,
-        lote.codigo.valor,
-        lote.parcelaId,
-        lote.fechaCosecha.iso,
-        lote.cantidad.valor,
-        lote.variedad,
-        lote.observaciones,
-        lote.estado,
-        lote.createdAt,
-      ],
-    );
+    await invocar(this.pool, 'insertar_lote', [
+      lote.id,
+      lote.codigo.valor,
+      lote.parcelaId,
+      lote.fechaCosecha.iso,
+      lote.cantidad.valor,
+      lote.variedad,
+      lote.observaciones,
+      lote.estado,
+      lote.createdAt,
+    ]);
   }
 
   async actualizar(lote: Lote): Promise<void> {
-    await this.pool.query(
-      `UPDATE lotes
-       SET parcela_id = $1, fecha_cosecha = $2, cantidad_kg = $3, variedad = $4, observaciones = $5
-       WHERE id = $6`,
-      [lote.parcelaId, lote.fechaCosecha.iso, lote.cantidad.valor, lote.variedad, lote.observaciones, lote.id],
-    );
+    await invocar(this.pool, 'actualizar_lote', [
+      lote.parcelaId,
+      lote.fechaCosecha.iso,
+      lote.cantidad.valor,
+      lote.variedad,
+      lote.observaciones,
+      lote.id,
+    ]);
   }
 
   async eliminar(id: string): Promise<void> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      await borrarTrazabilidadDeLote(client, id);
-      await client.query('DELETE FROM analisis_lotes WHERE lote_id = $1', [id]);
-      await client.query('DELETE FROM lotes WHERE id = $1', [id]);
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    await invocar(this.pool, 'eliminar_lote', [id]);
   }
 
   async buscarPorId(id: string): Promise<Lote | null> {
-    const resultado = await this.pool.query('SELECT * FROM lotes WHERE id = $1', [id]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_lote_por_id', [id]));
     return fila ? mapLote(fila) : null;
   }
 
   async buscarPorCodigo(codigo: string): Promise<Lote | null> {
-    const resultado = await this.pool.query('SELECT * FROM lotes WHERE codigo = $1', [codigo]);
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'buscar_lote_por_codigo', [codigo]));
     return fila ? mapLote(fila) : null;
   }
 
   async listar(): Promise<Lote[]> {
-    const resultado = await this.pool.query('SELECT * FROM lotes ORDER BY created_at DESC');
-    return filas(resultado).map(mapLote);
+    return filasDe(await invocar(this.pool, 'listar_lotes')).map(mapLote);
   }
 
   async listarPorParcelas(parcelaIds: string[]): Promise<Lote[]> {
     if (parcelaIds.length === 0) {
       return [];
     }
-    const resultado = await this.pool.query(
-      'SELECT * FROM lotes WHERE parcela_id = ANY($1::uuid[]) ORDER BY created_at DESC',
-      [parcelaIds],
-    );
-    return filas(resultado).map(mapLote);
+    return filasDe(await invocar(this.pool, 'listar_lotes_por_parcelas', [parcelaIds])).map(mapLote);
   }
 }
 
@@ -549,45 +350,52 @@ export class PostgresAnalisisLoteRepository implements AnalisisLoteRepositoryPor
   constructor(private readonly pool: Pool) {}
 
   async guardar(analisis: AnalisisLote): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO analisis_lotes
-        (id, lote_id, estrategia, clasificacion, resumen, observaciones, confianza, proveedor, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)`,
-      [
-        analisis.id,
-        analisis.loteId,
-        analisis.estrategia,
-        analisis.clasificacion,
-        analisis.resumen,
-        JSON.stringify(analisis.observaciones),
-        analisis.confianza,
-        analisis.proveedor,
-        analisis.createdAt,
-      ],
-    );
+    await invocar(this.pool, 'insertar_analisis', [
+      analisis.id,
+      analisis.loteId,
+      analisis.estrategia,
+      analisis.clasificacion,
+      analisis.resumen,
+      JSON.stringify(analisis.observaciones),
+      analisis.confianza,
+      analisis.proveedor,
+      analisis.createdAt,
+    ]);
   }
 
   async eliminarPorLote(loteId: string): Promise<void> {
-    await this.pool.query('DELETE FROM analisis_lotes WHERE lote_id = $1', [loteId]);
+    await invocar(this.pool, 'borrar_analisis_lote', [loteId]);
   }
 
   async buscarUltimoPorLote(loteId: string): Promise<AnalisisLote | null> {
-    const resultado = await this.pool.query(
-      'SELECT * FROM analisis_lotes WHERE lote_id = $1 ORDER BY created_at DESC LIMIT 1',
-      [loteId],
-    );
-    const fila = primera(resultado);
+    const fila = primeraDe(await invocar(this.pool, 'ultimo_analisis_lote', [loteId]));
     return fila ? mapAnalisis(fila) : null;
   }
 }
 
-function primera(resultado: QueryResult): Fila | null {
-  const fila = filas(resultado)[0];
-  return fila ?? null;
+function datosUsuario(usuario: Usuario): unknown[] {
+  return [
+    usuario.id,
+    usuario.nombre,
+    usuario.email.valor,
+    usuario.passwordHash,
+    usuario.rol,
+    usuario.estado,
+    usuario.debeCambiarPassword,
+    usuario.createdAt,
+  ];
 }
 
-function filas(resultado: QueryResult): Fila[] {
-  return resultado.rows as Fila[];
+function datosProductor(productor: Productor): unknown[] {
+  return [
+    productor.id,
+    productor.usuarioId,
+    productor.nombre,
+    productor.documento.valor,
+    productor.telefono,
+    productor.organizacion,
+    productor.createdAt,
+  ];
 }
 
 function esClaveForanea(error: unknown): boolean {

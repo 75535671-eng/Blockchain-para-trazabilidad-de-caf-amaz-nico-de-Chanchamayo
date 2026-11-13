@@ -2,6 +2,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { Usuario } from '../../domain/entities/Usuario';
 import { BcryptPasswordHasher } from '../../adapters/out/security/SecurityAdapters';
+import { invocar, primeraDe } from '../persistence/invocar';
 import { leerConfig } from './container';
 import { crearPoolPostgres } from './postgres';
 
@@ -19,8 +20,8 @@ async function seed(): Promise<void> {
     throw new Error('DATABASE_URL es obligatorio.');
   }
   const pool = crearPoolPostgres(config.databaseUrl);
-  const existente = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
-  if (existente.rows.length > 0) {
+  const existente = primeraDe(await invocar(pool, 'buscar_usuario_por_email', [email]));
+  if (existente) {
     console.log('El administrador ya existe.');
     await pool.end();
     return;
@@ -33,10 +34,16 @@ async function seed(): Promise<void> {
     passwordHash: await hasher.hash(password),
     rol: 'ADMINISTRADOR',
   });
-  await pool.query(
-    'INSERT INTO usuarios (id, nombre, email, password_hash, rol) VALUES ($1, $2, $3, $4, $5)',
-    [usuario.id, usuario.nombre, usuario.email.valor, usuario.passwordHash, usuario.rol],
-  );
+  await invocar(pool, 'insertar_usuario', [
+    usuario.id,
+    usuario.nombre,
+    usuario.email.valor,
+    usuario.passwordHash,
+    usuario.rol,
+    usuario.estado,
+    usuario.debeCambiarPassword,
+    usuario.createdAt,
+  ]);
   console.log(`Administrador creado: ${email}`);
   await pool.end();
 }

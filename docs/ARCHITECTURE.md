@@ -17,7 +17,7 @@ El dominio no importa Express, Angular, PostgreSQL, pg, Supabase, Axios ni un SD
 - `backend/src/domain`: entidades, value objects y servicios de negocio.
 - `backend/src/application`: casos de uso, DTO y puertos de entrada y salida.
 - `backend/src/adapters/in`: controllers y autenticación HTTP.
-- `backend/src/adapters/out`: PostgreSQL, hash, JWT y la API externa de IA.
+- `backend/src/adapters/out`: llamadas a las funciones de PostgreSQL, hash, JWT y la API externa de IA. Las consultas están en `database/migrations`.
 - `backend/src/infrastructure`: configuración, inyección de dependencias y servidor.
 
 ## Decisiones de diseño del PMV1

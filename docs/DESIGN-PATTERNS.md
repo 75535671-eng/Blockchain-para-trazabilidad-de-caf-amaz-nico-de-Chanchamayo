@@ -6,7 +6,7 @@ Los cinco patrones resuelven una necesidad del incremento. No decoran el código
 
 Problema: los casos de uso necesitan guardar y consultar usuarios, productores, parcelas, lotes y análisis sin conocer SQL.
 
-Dónde: `backend/src/application/ports/output/OutputPorts.ts` define los puertos. `backend/src/adapters/out/persistence/PostgresRepositories.ts` los implementa.
+Dónde: `backend/src/application/ports/output/OutputPorts.ts` define los puertos. `backend/src/adapters/out/persistence/PostgresRepositories.ts` los implementa llamando funciones de `database/migrations/009_funciones_persistencia.sql`. El SQL no está en el adaptador.
 
 Por qué: el dominio y la aplicación se prueban con repositorios en memoria. PostgreSQL puede cambiarse sin tocar las reglas del lote.
 
