@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import { AuthController, EventoController, InteligenciaController, LoteController, ParcelaController, ProductorController, ReporteController, SolicitudController } from '../../adapters/in/controllers/Controllers';
+import { limitePorCampo } from '../../adapters/in/http/limite';
 import { autenticar, manejarError } from '../../adapters/in/http/http';
 import { TokenProviderPort, UsuarioRepositoryPort } from '../../application/ports/output/OutputPorts';
 
@@ -21,7 +22,14 @@ export interface AppContainer {
 export function createApp(container: AppContainer): Express {
   const app = express();
   app.use(cors({ origin: origenesLocales(container.corsOrigin) }));
-  app.use(express.json());
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Frame-Options', 'DENY');
+    next();
+  });
+  app.use(express.json({ limit: '100kb' }));
+  const limiteAcceso = limitePorCampo('email', 30, 15 * 60 * 1000);
   const requiereAuth = autenticar(container.tokens, container.usuarios);
 
   app.get(['/api', '/api/'], (_req, res) => {
@@ -36,9 +44,9 @@ export function createApp(container: AppContainer): Express {
     res.status(200).json({ estado: 'ok' });
   });
 
-  app.post('/api/auth/register', asyncHandler(container.auth.registrarUsuario));
+  app.post('/api/auth/register', limiteAcceso, asyncHandler(container.auth.registrarUsuario));
   app.get('/api/auth/documento/:documento', asyncHandler(container.auth.consultarDocumento));
-  app.post('/api/auth/login', asyncHandler(container.auth.login));
+  app.post('/api/auth/login', limiteAcceso, asyncHandler(container.auth.login));
   app.get('/api/auth/sesion', requiereAuth, asyncHandler(container.auth.sesion));
   app.post('/api/auth/cambiar-contrasena', requiereAuth, asyncHandler(container.auth.cambiarContrasena));
 

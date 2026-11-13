@@ -91,9 +91,9 @@ Al registrar, la API calcula el SHA-256 del contenido canónico: lote, etapa, fe
 
 ### Predicción de calidad
 
-La predicción no reutiliza el análisis de coherencia. El adaptador de producción no tiene un modelo validado integrado, así que no inventa ni guarda resultados.
+La predicción no reutiliza el análisis de coherencia. El contenedor de producción usa el modelo de prueba exportado de la PoC. El resultado es una estimación y no certifica la calidad en taza.
 
-- `POST /api/lotes/:id/prediccion` — revisa variedad, altitud, método y humedad del último beneficio. Responde `datos_insuficientes` o `no_disponible`, con `prediccion` en null. Solo persistiría una fila si un modelo real devolviera un resultado.
+- `POST /api/lotes/:id/prediccion` — revisa variedad, altitud, método y humedad del último beneficio. Responde `datos_insuficientes` si faltan esos datos. Si el modelo de prueba puede calcular, responde `disponible`, guarda la fila y devuelve la categoría y la referencia del puntaje.
 - `GET /api/lotes/:id/predicciones` — predicciones realmente guardadas de ese lote.
 - `GET /api/predicciones` — predicciones visibles para el usuario.
 - `GET /api/modelo/evaluacion` — estado de la PoC RF-IA-01. El estado es `NO_CONCLUYENTE`. Las métricas históricas no miden calidad de los lotes del sistema y no incluyen `hash_blockchain_valid`.

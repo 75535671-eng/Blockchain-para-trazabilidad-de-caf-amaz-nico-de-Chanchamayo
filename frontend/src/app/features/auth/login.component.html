@@ -15,7 +15,7 @@
       <form [formGroup]="form" (ngSubmit)="enviar()">
         <label class="campo-linea">
           <span class="ico" aria-hidden="true">✉</span>
-          <input formControlName="email" type="email" autocomplete="username" placeholder="Correo electrónico" />
+          <input formControlName="email" type="email" autocomplete="username" placeholder="Correo electrónico" aria-label="Correo electrónico" />
         </label>
         <label class="campo-linea">
           <span class="ico" aria-hidden="true">🔒</span>
@@ -24,8 +24,9 @@
             [type]="verClave ? 'text' : 'password'"
             autocomplete="current-password"
             placeholder="Contraseña"
+            aria-label="Contraseña"
           />
-          <button type="button" class="ojo" (click)="verClave = !verClave">
+          <button type="button" class="ojo" (click)="verClave = !verClave" [attr.aria-label]="verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'">
             {{ verClave ? 'Ocultar' : 'Ver' }}
           </button>
         </label>

@@ -36,6 +36,7 @@ export class IniciarSesion implements IniciarSesionUseCase {
           throw new ForbiddenError('Tu solicitud de registro fue rechazada.');
         }
       }
+      console.warn('Inicio de sesión rechazado.');
       throw new ValidationError('El correo o la contraseña no son válidos.');
     }
     const productor = await this.productores.buscarPorUsuarioId(usuario.id);
